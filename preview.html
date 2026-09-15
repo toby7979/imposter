@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Word imposter preview</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --sky: #7FD6F5;
+  --grass: #6BD26B;
+  --ink: #241C3D;
+  --ink-soft: #4A4468;
+  --coral: #FF5C6C;
+  --coral-dark: #C93B48;
+  --orange: #FF9457;
+  --orange-dark: #C9683A;
+  --pink: #FF5C8A;
+  --pink-dark: #C93B63;
+  --amber: #FFD84A;
+  --amber-dark: #C9A200;
+  --purple: #6C4CE0;
+  --purple-dark: #4C33A8;
+  --green: #4CD97B;
+  --green-dark: #2C8C50;
+  --blue: #4AA8FF;
+  --blue-dark: #2A6FBF;
+  --white: #FFFFFF;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2 {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  margin: 0;
+}
+
+#app {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 20px 18px 40px;
+  min-height: 100vh;
+}
+
+.screen { display: flex; flex-direction: column; gap: 18px; }
+
+.splash { align-items: center; padding-top: 12px; gap: 14px; }
+.splash .brand { padding: 0; }
+.splash h1 { font-size: 30px; }
+
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: -4px; }
+.icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 3.5px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.icon-btn:active { transform: translateY(3px); box-shadow: none; }
+
+.instructions .ready-card { text-align: left; }
+.instructions .ready-card h2 { text-align: center; margin-bottom: 14px; }
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.steps li { padding-left: 4px; }
+
+.brand { text-align: center; padding: 4px 0; }
+.mascot { width: 92px; height: 92px; margin: 0 auto 6px; display: block; }
+.brand h1 {
+  font-size: 28px;
+  color: var(--coral);
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+  letter-spacing: 0.5px;
+}
+.subtitle {
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--white);
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 2.5px solid var(--ink);
+  margin: 8px 0 0;
+}
+
+.block-label {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.theme-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 4px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--ink);
+  transition: transform 0.08s ease;
+}
+.theme-tile:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+
+.theme-tile.c-teal { background: var(--blue); color: var(--white); box-shadow: 0 5px 0 var(--blue-dark); }
+.theme-tile.c-coral { background: var(--coral); color: var(--white); box-shadow: 0 5px 0 var(--coral-dark); }
+.theme-tile.c-pink { background: var(--pink); color: var(--white); box-shadow: 0 5px 0 var(--pink-dark); }
+.theme-tile.c-amber { background: var(--amber); color: var(--ink); box-shadow: 0 5px 0 var(--amber-dark); }
+.theme-tile.c-green { background: var(--green); color: var(--white); box-shadow: 0 5px 0 var(--green-dark); }
+.theme-tile.c-blue { background: var(--orange); color: var(--white); box-shadow: 0 5px 0 var(--orange-dark); }
+.theme-tile.c-purple { background: var(--purple); color: var(--white); box-shadow: 0 5px 0 var(--purple-dark); }
+.theme-tile:not(.selected) { opacity: 0.55; }
+.theme-tile.selected { opacity: 1; }
+
+.tile-icon { width: 28px; height: 28px; color: currentColor; }
+.tile-icon svg { width: 100%; height: 100%; display: block; }
+.tile-name { font-family: 'Baloo 2', sans-serif; font-size: 14px; font-weight: 500; }
+.tile-tag { font-size: 11px; opacity: 0.9; }
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--white);
+  border: 4px solid var(--ink);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  box-shadow: 0 5px 0 var(--ink);
+}
+.step-btn {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  border: 3.5px solid var(--ink);
+  background: var(--amber);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--amber-dark);
+}
+.step-btn:active { transform: translateY(3px); box-shadow: none; }
+.step-value { font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 700; }
+
+.mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 3.5px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  opacity: 0.55;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.mode-btn:active { transform: translateY(3px); box-shadow: none; }
+.mode-btn.active {
+  opacity: 1;
+  background: var(--amber);
+  box-shadow: 0 4px 0 var(--amber-dark);
+}
+.mode-name { font-family: 'Baloo 2', sans-serif; font-size: 14px; font-weight: 700; }
+.mode-desc { font-size: 11px; line-height: 1.3; }
+
+.cta {
+  width: 100%;
+  padding: 17px;
+  border-radius: var(--radius-md);
+  border: 4px solid var(--ink);
+  background: var(--green);
+  color: var(--white);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 0 var(--green-dark);
+}
+.cta:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--green-dark); }
+
+.ghost-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.footnote {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink);
+  margin: -4px 0 0;
+}
+
+.pass-hint {
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 6px 14px;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.player-list { display: flex; flex-direction: column; gap: 10px; }
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 4px solid var(--ink);
+  background: var(--white);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--ink);
+}
+.player-row:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+.player-row.seen { opacity: 0.5; box-shadow: none; cursor: default; }
+.row-hint { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 400; color: var(--ink-soft); }
+
+.word-card {
+  background: var(--purple);
+  border: 5px solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 7px 0 var(--purple-dark);
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--white);
+}
+.word-card-label { font-size: 13px; opacity: 0.9; margin: 0 0 10px; }
+.word-card-value {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  margin: 0;
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+}
+
+.imposter-card { background: var(--coral); box-shadow: 0 7px 0 var(--coral-dark); }
+.imposter-value { font-size: 26px; }
+.imposter-hint {
+  font-size: 13px;
+  margin: 14px 0 0;
+  opacity: 0.95;
+  line-height: 1.4;
+}
+
+.ready-card {
+  background: var(--white);
+  border: 5px solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 0 var(--ink);
+  padding: 28px 20px;
+  text-align: center;
+}
+.ready-icon {
+  display: inline-flex;
+  width: 46px; height: 46px;
+  padding: 11px;
+  align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--green);
+  border: 3px solid var(--ink);
+  color: var(--white);
+  margin-bottom: 10px;
+}
+.ready-icon svg { width: 100%; height: 100%; }
+.ready-card h2 { font-size: 18px; margin-bottom: 6px; }
+.ready-card p { font-size: 14px; color: var(--ink-soft); margin: 0; }
+
+body { padding: 0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>const WORD_PACKS = [
+  {
+    id: "elevenplus",
+    name: "11 plus vocabulary",
+    tagline: "Close synonyms, trickier to bluff",
+    icon: "school",
+    color: "coral",
+    type: "pairs",
+    pairs: [
+      ["Reluctant","Hesitant"],["Abundant","Plentiful"],["Furious","Irritated"],
+      ["Enormous","Substantial"],["Peculiar","Unusual"],["Diligent","Conscientious"],
+      ["Gloomy","Melancholy"],["Courageous","Audacious"],["Feeble","Fragile"],
+      ["Meticulous","Thorough"],["Ancient","Archaic"],["Generous","Charitable"],
+      ["Vast","Immense"],["Cunning","Devious"],["Weary","Exhausted"],
+      ["Timid","Bashful"],["Vivid","Striking"],["Stubborn","Obstinate"],
+      ["Fortunate","Prosperous"],["Anxious","Apprehensive"],
+      ["Obscure","Vague"],["Radiant","Luminous"],["Frivolous","Trivial"],
+      ["Tedious","Monotonous"],["Candid","Frank"],["Eloquent","Articulate"],
+      ["Ominous","Foreboding"],["Tranquil","Serene"],["Zealous","Fervent"],
+      ["Wary","Cautious"],["Resilient","Tenacious"],["Benevolent","Compassionate"],
+      ["Turbulent","Chaotic"],["Skeptical","Doubtful"],["Pristine","Immaculate"],
+      ["Elusive","Evasive"],["Prudent","Sensible"],["Volatile","Erratic"],
+      ["Austere","Stark"],["Genial","Amiable"]
+    ]
+  },
+  {
+    id: "numbers",
+    name: "Numbers 0 to 50",
+    tagline: "Sharp listening required",
+    icon: "hash",
+    color: "amber",
+    type: "numbers",
+    min: 0,
+    max: 50,
+    minOffset: 1,
+    maxOffset: 5
+  },
+  {
+    id: "everyday",
+    name: "Everyday items",
+    tagline: "Ordinary things, not food",
+    icon: "abc",
+    color: "teal",
+    type: "pairs",
+    pairs: [
+      ["Umbrella","Raincoat"],["Sofa","Armchair"],["Guitar","Violin"],["Train","Bus"],
+      ["Library","Bookshop"],["Snow","Rain"],["Football","Rugby"],["Cat","Dog"],
+      ["Mountain","Hill"],["Camera","Phone"],["Kitchen","Bathroom"],["Bicycle","Scooter"],
+      ["Forest","Jungle"],["River","Lake"],["Winter","Autumn"],["Doctor","Nurse"],
+      ["Shoe","Boot"],["Hat","Cap"],["Chair","Stool"],["Window","Door"],
+      ["Pencil","Pen"],["Book","Magazine"],["Clock","Watch"],["Fork","Spoon"],
+      ["Plate","Bowl"],["Garden","Park"],["School","College"],["Shop","Market"],
+      ["Car","Van"],["Plane","Helicopter"],["Ship","Boat"],["Moon","Star"],
+      ["Fire","Candle"],["Ice","Frost"],["Desert","Dune"],["Island","Peninsula"],
+      ["Beach","Pool"],["Bucket","Basket"],["Backpack","Suitcase"],["Hammer","Screwdriver"]
+    ]
+  },
+  {
+    id: "animals",
+    name: "Animals",
+    tagline: "Spot the odd creature out",
+    icon: "paw",
+    color: "pink",
+    type: "pairs",
+    pairs: [
+      ["Lion","Tiger"],["Dolphin","Shark"],["Eagle","Hawk"],["Rabbit","Hare"],
+      ["Frog","Toad"],["Crocodile","Alligator"],["Wolf","Fox"],["Butterfly","Moth"],
+      ["Donkey","Mule"],["Sparrow","Robin"],["Camel","Llama"],["Turtle","Tortoise"],
+      ["Bee","Wasp"],["Owl","Falcon"],["Squirrel","Chipmunk"],
+      ["Horse","Zebra"],["Elephant","Rhino"],["Giraffe","Antelope"],["Penguin","Puffin"],
+      ["Kangaroo","Wallaby"],["Hedgehog","Porcupine"],["Snake","Lizard"],["Goat","Sheep"],
+      ["Duck","Goose"],["Swan","Heron"],["Mouse","Rat"],["Bat","Swallow"],
+      ["Whale","Shark"],["Octopus","Squid"],["Crab","Lobster"],["Ant","Termite"],
+      ["Peacock","Pheasant"],["Flamingo","Stork"],["Bear","Panda"],["Leopard","Cheetah"],
+      ["Otter","Beaver"],["Seal","Walrus"],["Parrot","Macaw"],["Cricket","Grasshopper"],
+      ["Snail","Slug"]
+    ]
+  },
+  {
+    id: "food",
+    name: "Food and drink",
+    tagline: "For hungry imposters",
+    icon: "food",
+    color: "green",
+    type: "pairs",
+    pairs: [
+      ["Apple","Pear"],["Orange","Lemon"],["Cheese","Butter"],["Soup","Stew"],
+      ["Cake","Biscuit"],["Milk","Yoghurt"],["Chicken","Turkey"],["Rice","Couscous"],
+      ["Chocolate","Caramel"],["Jam","Honey"],["Pancake","Waffle"],["Grape","Cherry"],
+      ["Carrot","Parsnip"],["Salmon","Trout"],["Noodles","Spaghetti"],
+      ["Burger","Sandwich"],["Fries","Chips"],["Sausage","Bacon"],["Pie","Tart"],
+      ["Muffin","Cupcake"],["Strawberry","Raspberry"],["Banana","Plantain"],
+      ["Potato","Sweet potato"],["Onion","Garlic"],["Pepper","Chilli"],
+      ["Mushroom","Truffle"],["Ham","Salami"],["Prawn","Shrimp"],["Tuna","Mackerel"],
+      ["Yam","Cassava"],["Broccoli","Cauliflower"],["Spinach","Kale"],
+      ["Peach","Nectarine"],["Melon","Watermelon"],["Croissant","Brioche"],
+      ["Doughnut","Pretzel"],["Lentils","Chickpeas"],["Cinnamon","Nutmeg"],["Vinegar","Oil"]
+    ]
+  },
+  {
+    id: "countries",
+    name: "Countries",
+    tagline: "A little geography test",
+    icon: "globe",
+    color: "blue",
+    type: "pairs",
+    pairs: [
+      ["France","Spain"],["Japan","China"],["Kenya","Nigeria"],["Brazil","Argentina"],
+      ["Norway","Sweden"],["Egypt","Morocco"],["Canada","Mexico"],["Italy","Greece"],
+      ["India","Pakistan"],["Peru","Chile"],["Iceland","Ireland"],["Vietnam","Thailand"],
+      ["Portugal","Spain"],["Poland","Germany"],["Australia","New Zealand"],
+      ["Turkey","Iran"],["Russia","Ukraine"],["Finland","Denmark"],["Netherlands","Belgium"],
+      ["Switzerland","Austria"],["Scotland","Wales"],["England","Wales"],
+      ["South Africa","Zimbabwe"],["Ghana","Senegal"],["Ethiopia","Sudan"],
+      ["Indonesia","Malaysia"],["Philippines","Vietnam"],["South Korea","Taiwan"],
+      ["Colombia","Venezuela"],["Ecuador","Bolivia"],["Cuba","Jamaica"],
+      ["Croatia","Slovenia"],["Hungary","Romania"],["Czech Republic","Slovakia"],
+      ["Estonia","Latvia"],["Nepal","Bhutan"],["Qatar","UAE"],["Saudi Arabia","Oman"],
+      ["Uruguay","Paraguay"],["Panama","Costa Rica"]
+    ]
+  },
+  {
+    id: "movies",
+    name: "Movies",
+    tagline: "Family film trivia",
+    icon: "movie",
+    color: "purple",
+    type: "pairs",
+    pairs: [
+      ["Frozen","Moana"],["Toy Story","Cars"],["Shrek","Madagascar"],["Finding Nemo","Finding Dory"],
+      ["The Lion King","Tarzan"],["Aladdin","Mulan"],["Up","Coco"],["Zootopia","Encanto"],
+      ["Inside Out","Soul"],["Ratatouille","Brave"],["Wall-E","Big Hero 6"],["The Incredibles","Despicable Me"],
+      ["Jurassic Park","King Kong"],["Star Wars","Star Trek"],["Harry Potter","Percy Jackson"],["The Matrix","Inception"],
+      ["Batman","Superman"],["Spider-Man","Iron Man"],["Home Alone","The Grinch"],["Elf","Polar Express"],
+      ["Jaws","Titanic"],["Avatar","Interstellar"],["Rocky","Creed"],["Cinderella","Snow White"],
+      ["Beauty and the Beast","The Little Mermaid"],["Sing","Trolls"],["Minions","Ice Age"],["Kung Fu Panda","Puss in Boots"],
+      ["How to Train Your Dragon","The Croods"],["Back to the Future","Groundhog Day"]
+    ]
+  }
+];
+</script>
+<script>const state = {
+  screen: "splash",
+  returnTo: "splash",
+  packId: WORD_PACKS[0].id,
+  difficulty: "hard",
+  players: 3,
+  round: null,
+  revealedIndex: null,
+  seenBy: []
+};
+
+// Replace this with a real Stripe Payment Link or Buy Me a Coffee / Ko-fi page URL.
+const SUPPORT_URL = "https://buymeacoffee.com/your-link-here";
+
+const el = (id) => document.getElementById(id);
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function pickPack(id) {
+  return WORD_PACKS.find((p) => p.id === id);
+}
+
+function buildRound(pack, difficulty) {
+  const imposterIndex = randInt(0, state.players - 1);
+  if (pack.type === "pairs") {
+    const pair = pack.pairs[randInt(0, pack.pairs.length - 1)];
+    return {
+      type: "pairs",
+      secretWord: pair[0],
+      imposterWord: difficulty === "easy" ? null : pair[1],
+      imposterIndex
+    };
+  }
+  const secret = randInt(pack.min, pack.max);
+  const candidates = [];
+  for (let n = pack.min; n <= pack.max; n++) {
+    const diff = Math.abs(n - secret);
+    if (diff >= pack.minOffset && diff <= pack.maxOffset) candidates.push(n);
+  }
+  const imposterNum = candidates.length
+    ? candidates[randInt(0, candidates.length - 1)]
+    : secret;
+  return {
+    type: "numbers",
+    secretWord: String(secret),
+    imposterWord: difficulty === "easy" ? null : String(imposterNum),
+    imposterIndex
+  };
+}
+
+function mascotSvg(size) {
+  return `
+    <svg class="mascot" width="${size}" height="${size}" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="100" cy="120" rx="66" ry="70" fill="#FF9457" stroke="#241C3D" stroke-width="6"/>
+      <path d="M42 88a58 40 0 01116 0z" fill="#2B2140"/>
+      <rect x="38" y="112" width="124" height="34" rx="16" fill="#2B2140"/>
+      <circle cx="74" cy="129" r="15" fill="#FFFFFF"/>
+      <circle cx="126" cy="129" r="15" fill="#FFFFFF"/>
+      <circle cx="77" cy="129" r="6" fill="#241C3D"/>
+      <circle cx="129" cy="129" r="6" fill="#241C3D"/>
+      <path d="M85 170q15 10 30 0" fill="none" stroke="#241C3D" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+  `;
+}
+
+function render() {
+  if (state.screen === "splash") return renderSplash();
+  if (state.screen === "instructions") return renderInstructions();
+  if (state.screen === "home") return renderHome();
+  if (state.screen === "reveal") return renderReveal();
+}
+
+function renderSplash() {
+  el("app").innerHTML = `
+    <section class="screen splash">
+      <div class="brand">
+        ${mascotSvg(120)}
+        <h1>Word imposter</h1>
+        <p class="subtitle">A pass-and-play guessing game</p>
+      </div>
+      <button class="cta" id="playBtn">Play</button>
+      <button class="ghost-btn" id="howToBtn">How to play</button>
+      <button class="ghost-btn" id="supportBtn">Support this app</button>
+    </section>
+  `;
+  el("playBtn").addEventListener("click", () => {
+    state.screen = "home";
+    render();
+  });
+  el("howToBtn").addEventListener("click", () => {
+    state.returnTo = "splash";
+    state.screen = "instructions";
+    render();
+  });
+  el("supportBtn").addEventListener("click", () => {
+    window.open(SUPPORT_URL, "_blank");
+  });
+}
+
+function renderInstructions() {
+  el("app").innerHTML = `
+    <section class="screen instructions">
+      <div class="ready-card">
+        <h2>How to play</h2>
+        <ol class="steps">
+          <li>Pick a theme and set how many players.</li>
+          <li>Pass the phone. Each player taps their own name and looks only at their own word.</li>
+          <li>Almost everyone sees the same word. One secret imposter sees a different one.</li>
+          <li>Going round the group, everyone says one clue about their word.</li>
+          <li>Discuss, then vote on who you think the imposter is.</li>
+          <li>Reveal it. Catch the imposter and everyone else wins.</li>
+        </ol>
+      </div>
+      <button class="cta" id="backBtn">Got it</button>
+    </section>
+  `;
+  el("backBtn").addEventListener("click", () => {
+    state.screen = state.returnTo;
+    render();
+  });
+}
+
+function renderHome() {
+  el("app").innerHTML = `
+    <section class="screen home">
+      <div class="topbar">
+        <button class="icon-btn" id="backSplashBtn" aria-label="Back">←</button>
+        <button class="icon-btn" id="helpBtn" aria-label="How to play">?</button>
+      </div>
+
+      <div class="block">
+        <p class="block-label">Pick a theme</p>
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+
+      <div class="block">
+        <p class="block-label">Players</p>
+        <div class="stepper">
+          <button class="step-btn" id="stepDown" aria-label="Fewer players">−</button>
+          <span class="step-value" id="playerCount">${state.players}</span>
+          <button class="step-btn" id="stepUp" aria-label="More players">+</button>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="block-label">Difficulty</p>
+        <div class="mode-toggle" id="modeToggle">
+          <button class="mode-btn ${state.difficulty === "easy" ? "active" : ""}" data-mode="easy">
+            <span class="mode-name">Easy</span>
+            <span class="mode-desc">Imposter is told, gets no word</span>
+          </button>
+          <button class="mode-btn ${state.difficulty === "hard" ? "active" : ""}" data-mode="hard">
+            <span class="mode-name">Hard</span>
+            <span class="mode-desc">Imposter gets a close alternate word</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="cta" id="startBtn">Start round</button>
+      <p class="footnote">Builds vocabulary while you play</p>
+    </section>
+  `;
+
+  const grid = el("themeGrid");
+  grid.innerHTML = WORD_PACKS.map((pack) => `
+    <button class="theme-tile c-${pack.color} ${pack.id === state.packId ? "selected" : ""}" data-id="${pack.id}">
+      <span class="tile-icon" aria-hidden="true">${iconGlyph(pack.icon)}</span>
+      <span class="tile-name">${pack.name}</span>
+      <span class="tile-tag">${pack.tagline}</span>
+    </button>
+  `).join("");
+
+  grid.querySelectorAll(".theme-tile").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.packId = btn.dataset.id;
+      renderHome();
+    });
+  });
+
+  el("backSplashBtn").addEventListener("click", () => {
+    state.screen = "splash";
+    render();
+  });
+  el("helpBtn").addEventListener("click", () => {
+    state.returnTo = "home";
+    state.screen = "instructions";
+    render();
+  });
+
+  el("stepDown").addEventListener("click", () => {
+    state.players = Math.max(3, state.players - 1);
+    el("playerCount").textContent = state.players;
+  });
+  el("stepUp").addEventListener("click", () => {
+    state.players = Math.min(8, state.players + 1);
+    el("playerCount").textContent = state.players;
+  });
+
+  el("modeToggle").querySelectorAll(".mode-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.difficulty = btn.dataset.mode;
+      renderHome();
+    });
+  });
+
+  el("startBtn").addEventListener("click", () => {
+    const pack = pickPack(state.packId);
+    state.round = buildRound(pack, state.difficulty);
+    state.seenBy = new Array(state.players).fill(false);
+    state.revealedIndex = null;
+    state.screen = "reveal";
+    render();
+  });
+}
+
+function renderReveal() {
+  if (state.revealedIndex !== null) return renderWordCard();
+
+  if (state.seenBy.every(Boolean)) {
+    el("app").innerHTML = `
+      <section class="screen reveal">
+        <div class="ready-card">
+          <span class="ready-icon" aria-hidden="true">${iconGlyph("check")}</span>
+          <h2>Everyone's ready</h2>
+          <p>Give one clue each, then vote on who you think the imposter is.</p>
+        </div>
+        <button class="cta" id="newRoundBtn">New round</button>
+        <button class="ghost-btn" id="changeSetupBtn">Change theme or players</button>
+      </section>
+    `;
+    el("newRoundBtn").addEventListener("click", () => {
+      const pack = pickPack(state.packId);
+      state.round = buildRound(pack, state.difficulty);
+      state.seenBy = new Array(state.players).fill(false);
+      render();
+    });
+    el("changeSetupBtn").addEventListener("click", () => {
+      state.screen = "home";
+      render();
+    });
+    return;
+  }
+
+  const rows = state.seenBy.map((seen, i) => `
+    <button class="player-row ${seen ? "seen" : ""}" data-i="${i}" ${seen ? "disabled" : ""}>
+      <span>Player ${i + 1}</span>
+      <span class="row-hint">${seen ? "Revealed" : "Tap to see your word"}</span>
+    </button>
+  `).join("");
+
+  el("app").innerHTML = `
+    <section class="screen reveal">
+      <p class="pass-hint">Pass the phone to each player in turn</p>
+      <div class="player-list">${rows}</div>
+    </section>
+  `;
+
+  el("app").querySelectorAll(".player-row:not(.seen)").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.revealedIndex = parseInt(btn.dataset.i, 10);
+      render();
+    });
+  });
+}
+
+function renderWordCard() {
+  const i = state.revealedIndex;
+  const isImposter = i === state.round.imposterIndex;
+  const isBlindImposter = isImposter && state.round.imposterWord === null;
+
+  if (isBlindImposter) {
+    el("app").innerHTML = `
+      <section class="screen reveal">
+        <div class="word-card imposter-card">
+          <p class="word-card-label">Player ${i + 1}</p>
+          <p class="word-card-value imposter-value">You're the imposter!</p>
+          <p class="imposter-hint">You don't get a word. Listen to the clues and bluff your way through.</p>
+        </div>
+        <button class="cta" id="hideBtn">Got it, hide this</button>
+      </section>
+    `;
+  } else {
+    const word = isImposter ? state.round.imposterWord : state.round.secretWord;
+    el("app").innerHTML = `
+      <section class="screen reveal">
+        <div class="word-card">
+          <p class="word-card-label">Player ${i + 1}, your word is</p>
+          <p class="word-card-value">${word}</p>
+        </div>
+        <button class="cta" id="hideBtn">Got it, hide word</button>
+      </section>
+    `;
+  }
+
+  el("hideBtn").addEventListener("click", () => {
+    state.seenBy[i] = true;
+    state.revealedIndex = null;
+    render();
+  });
+}
+
+function iconGlyph(name) {
+  const icons = {
+    abc: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 24V8h16a4 4 0 010 8H6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 16h14a4 4 0 010 8H6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    school: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 12l12-6 12 6-12 6-12-6z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M9 15v6c0 1.5 3 3 7 3s7-1.5 7-3v-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M27 12v7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`,
+    paw: `<svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="16" cy="21" rx="8" ry="6.5"/>
+      <ellipse cx="6" cy="13" rx="3" ry="4"/>
+      <ellipse cx="13" cy="8" rx="3" ry="4"/>
+      <ellipse cx="19" cy="8" rx="3" ry="4"/>
+      <ellipse cx="26" cy="13" rx="3" ry="4"/>
+    </svg>`,
+    hash: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 4L8 28M24 4l-3 24M5 11h22M4 21h22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    check: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 17l7 7 13-15" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    food: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 4v11a3 3 0 003 3v10M8 4v11M11 4v11M14 4v11" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M23 4c-3 0-4 3-4 6s1 5 4 5v13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    globe: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="2.5"/>
+      <ellipse cx="16" cy="16" rx="5" ry="12" stroke="currentColor" stroke-width="2.5"/>
+      <path d="M4 16h24M6 9h20M6 23h20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`,
+    lock: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="7" y="15" width="18" height="13" rx="3" fill="currentColor"/>
+      <path d="M11 15v-4a5 5 0 0110 0v4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`,
+    movie: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="10" width="24" height="18" rx="2.5" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M4 10l4-6h4l-4 6M14 10l4-6h4l-4 6M24 10l4-6h2v6" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    </svg>`
+  };
+  return icons[name] || "";
+}
+
+render();
+</script>
+</body>
+</html>
