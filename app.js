@@ -166,6 +166,7 @@ function renderHome() {
   const grid = el("themeGrid");
   grid.innerHTML = WORD_PACKS.map((pack) => `
     <button class="theme-tile c-${pack.color} ${pack.id === state.packId ? "selected" : ""}" data-id="${pack.id}">
+      ${pack.id === state.packId ? `<span class="tile-check" aria-hidden="true">${iconGlyph("check")}</span>` : ""}
       <span class="tile-icon" aria-hidden="true">${iconGlyph(pack.icon)}</span>
       <span class="tile-name">${pack.name}</span>
       <span class="tile-tag">${pack.tagline}</span>
