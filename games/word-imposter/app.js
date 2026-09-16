@@ -9,9 +9,6 @@ const state = {
   seenBy: []
 };
 
-// Replace this with a real Stripe Payment Link or Buy Me a Coffee / Ko-fi page URL.
-const SUPPORT_URL = "https://buymeacoffee.com/your-link-here";
-
 const el = (id) => document.getElementById(id);
 
 function showToast(message) {
@@ -118,7 +115,6 @@ function renderSplash() {
       <button class="cta" id="playBtn">Play</button>
       <button class="ghost-btn" id="shareBtn">Share with friends</button>
       <button class="ghost-btn" id="howToBtn">How to play</button>
-      <button class="ghost-btn" id="supportBtn">Support this app</button>
     </section>
   `;
   el("playBtn").addEventListener("click", () => {
@@ -130,9 +126,6 @@ function renderSplash() {
     state.returnTo = "splash";
     state.screen = "instructions";
     render();
-  });
-  el("supportBtn").addEventListener("click", () => {
-    window.open(SUPPORT_URL, "_blank");
   });
 }
 

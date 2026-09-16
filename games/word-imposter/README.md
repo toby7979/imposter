@@ -33,8 +33,8 @@ a `pairs` array of `[secretWord, imposterWord]` entries, or copy the
 `numbers` pack shape for a range-based theme.
 
 ## Support link
-The splash screen has a "Support this app" button pointing at
-`SUPPORT_URL` in `app.js` — currently a placeholder. Swap it for a
-real Buy Me a Coffee, Ko-fi, or Stripe Payment Link if you want a
-low-friction way for people to chip in. All six themes stay free —
-no locked content, no paywall.
+There's no tip jar wired up right now. To add one back: put a Buy Me a
+Coffee / Ko-fi / Stripe Payment Link URL in a `SUPPORT_URL` constant in
+`app.js`, and add a "Support this app" button next to "How to play" on
+the splash screen (see git history for the previous version). All
+themes stay free either way — no locked content, no paywall.
