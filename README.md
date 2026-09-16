@@ -1,41 +1,29 @@
-# Word Imposter
+# Party Pack
 
-A pass-and-play guessing game. One player is secretly given a different
-word or number to everyone else, and has to bluff their way through a
-clue round without getting caught.
+A growing collection of free pass-and-play party games. No installs, no
+accounts — open a link and play. (Working title — rename freely, it's
+just "the suite" for now.)
 
-## What's here
-- `index.html`, `styles.css`, `app.js`, `wordpacks.js` — the whole app,
-  no build step, no dependencies
-- `manifest.json`, `service-worker.js`, `icons/` — makes it installable
-  on a phone home screen and usable offline
-- Four themes: everyday words, 11+ vocabulary, animals, numbers 0-50
+## Structure
+- `index.html`, `hub.css` — the landing page, a directory of games
+- `games/<game-name>/` — each game is a fully standalone static PWA:
+  its own `index.html`, assets, `manifest.json`, and `service-worker.js`.
+  Installing one to a home screen doesn't pull in the others.
 
-## Try it locally
-Open a terminal in this folder and run:
+Each game currently keeps its own copy of the shared visual language
+(fonts, color tokens, button styles) rather than importing a shared
+stylesheet. That's deliberate for now — with only one game shipped,
+it's too early to know what should actually be shared. Once a second
+game exists, pull the common pieces into a `shared/` folder based on
+what's actually duplicated, not what's guessed now.
 
-    python3 -m http.server 8000
+## Adding a new game
+1. Create `games/<new-game-name>/` as its own static app (own
+   `manifest.json`, `service-worker.js`, icons — see `games/word-imposter/`
+   as a reference)
+2. Add a card for it to the grid in the root `index.html`
+3. Push — the site redeploys automatically (Netlify, connected to `main`)
 
-Then visit `http://localhost:8000` in a browser.
-
-## Deploy it (free)
-1. Push this folder to a new GitHub repo
-2. Go to vercel.com or netlify.com, sign in with GitHub, and import the repo
-3. No build settings needed — it's a static site
-4. You'll get a live URL in under a minute
-
-## Install on iPhone
-Once deployed, open the URL in Safari, tap the Share icon, then
-"Add to Home Screen." It'll behave like a normal app icon.
-
-## Adding more themes
-Edit `wordpacks.js` — add a new object to the `WORD_PACKS` array with
-a `pairs` array of `[secretWord, imposterWord]` entries, or copy the
-`numbers` pack shape for a range-based theme.
-
-## Support link
-The splash screen has a "Support this app" button pointing at
-`SUPPORT_URL` in `app.js` — currently a placeholder. Swap it for a
-real Buy Me a Coffee, Ko-fi, or Stripe Payment Link if you want a
-low-friction way for people to chip in. All six themes stay free —
-no locked content, no paywall.
+## Deploy
+Static site, no build step. Connected to Netlify via GitHub — every
+push to `main` redeploys automatically.
