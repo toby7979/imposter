@@ -14,6 +14,41 @@ const SUPPORT_URL = "https://buymeacoffee.com/your-link-here";
 
 const el = (id) => document.getElementById(id);
 
+function showToast(message) {
+  const existing = document.querySelector(".toast");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+async function shareGame() {
+  const shareData = {
+    title: "Word Imposter",
+    text: "One player gets a different word and has to bluff. Free pass-and-play game:",
+    url: location.origin + location.pathname
+  };
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+    } catch (e) {
+      // user cancelled the share sheet, nothing to do
+    }
+    return;
+  }
+  const copied = await Promise.race([
+    navigator.clipboard.writeText(shareData.url).then(() => true).catch(() => false),
+    new Promise((resolve) => setTimeout(() => resolve(false), 1200))
+  ]);
+  if (copied) {
+    showToast("Link copied! Send it to your group.");
+  } else {
+    window.prompt("Copy this link:", shareData.url);
+  }
+}
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -81,6 +116,7 @@ function renderSplash() {
         <p class="subtitle">A pass-and-play guessing game</p>
       </div>
       <button class="cta" id="playBtn">Play</button>
+      <button class="ghost-btn" id="shareBtn">Share with friends</button>
       <button class="ghost-btn" id="howToBtn">How to play</button>
       <button class="ghost-btn" id="supportBtn">Support this app</button>
     </section>
@@ -89,6 +125,7 @@ function renderSplash() {
     state.screen = "home";
     render();
   });
+  el("shareBtn").addEventListener("click", shareGame);
   el("howToBtn").addEventListener("click", () => {
     state.returnTo = "splash";
     state.screen = "instructions";
@@ -229,6 +266,7 @@ function renderReveal() {
         </div>
         <button class="cta" id="newRoundBtn">New round</button>
         <button class="ghost-btn" id="changeSetupBtn">Change theme or players</button>
+        <button class="ghost-btn" id="shareBtn">Share with friends</button>
       </section>
     `;
     el("newRoundBtn").addEventListener("click", () => {
@@ -241,6 +279,7 @@ function renderReveal() {
       state.screen = "home";
       render();
     });
+    el("shareBtn").addEventListener("click", shareGame);
     return;
   }
 
