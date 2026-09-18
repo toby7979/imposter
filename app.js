@@ -347,6 +347,10 @@ function renderReveal() {
   `;
 
   el("backHomeBtn").addEventListener("click", () => {
+    const someAlreadySeen = state.seenBy.some(Boolean);
+    if (someAlreadySeen && !window.confirm("Go back to setup? Some players already saw their word this round, so starting again will give everyone a new one.")) {
+      return;
+    }
     state.screen = "home";
     render();
   });
