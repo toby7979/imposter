@@ -1,15 +1,22 @@
 # Word Imposter
 
-A pass-and-play guessing game. One player is secretly given a different
-word or number to everyone else, and has to bluff their way through a
-clue round without getting caught.
+A pass-and-play vocabulary-building bluffing game. One player is secretly
+given a different word or number to everyone else, and has to bluff
+their way through a clue round without getting caught. 11+ vocabulary
+is the default theme (closest to genuinely educational), but it's built
+to be family fun first — the other themes (animals, food, countries,
+movies, numbers) stay just as prominent for players who want pure play
+over the vocabulary angle.
 
 ## What's here
 - `index.html`, `styles.css`, `app.js`, `wordpacks.js` — the whole app,
   no build step, no dependencies
 - `manifest.json`, `service-worker.js`, `icons/` — makes it installable
   on a phone home screen and usable offline
-- Four themes: everyday words, 11+ vocabulary, animals, numbers 0-50
+- Seven themes: 11+ vocabulary, numbers 0-50, everyday items, animals,
+  food and drink, countries, movies
+- Named players and a running "imposters caught vs. escaped" score
+  across rounds (resettable from the setup screen)
 
 ## Try it locally
 Open a terminal in this folder and run:

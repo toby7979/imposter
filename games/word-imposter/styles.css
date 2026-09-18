@@ -84,6 +84,17 @@ h1, h2 {
 }
 .icon-btn:active { transform: translateY(3px); box-shadow: none; }
 
+.score-pill {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--surface);
+  border: 2.5px solid var(--surface-border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: var(--text);
+}
+
 .instructions .ready-card { text-align: left; }
 .instructions .ready-card h2 { text-align: center; margin-bottom: 14px; }
 .steps {
@@ -210,6 +221,20 @@ h1, h2 {
 .step-btn:active { transform: translateY(3px); box-shadow: none; }
 .step-value { font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 700; }
 
+.name-list { display: flex; flex-direction: column; gap: 8px; }
+.name-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 3px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.name-input:focus { outline: 2px solid var(--purple); outline-offset: 1px; }
+
 .mode-toggle {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -254,6 +279,9 @@ h1, h2 {
   box-shadow: 0 6px 0 var(--green-dark);
 }
 .cta:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--green-dark); }
+
+.cta.c-coral { background: var(--coral); box-shadow: 0 6px 0 var(--coral-dark); }
+.cta.c-coral:active { box-shadow: 0 2px 0 var(--coral-dark); }
 
 .ghost-btn {
   width: 100%;

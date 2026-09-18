@@ -1,7 +1,7 @@
 {
   "name": "Word Imposter",
   "short_name": "Imposter",
-  "description": "A pass-and-play word guessing game for the whole family",
+  "description": "A vocabulary-building bluffing game for the whole family",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#FFF7EC",

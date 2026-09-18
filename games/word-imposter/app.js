@@ -4,12 +4,27 @@ const state = {
   packId: WORD_PACKS[0].id,
   difficulty: "hard",
   players: 3,
+  playerNames: ["Player 1", "Player 2", "Player 3"],
   round: null,
   revealedIndex: null,
-  seenBy: []
+  seenBy: [],
+  scores: { caught: 0, escaped: 0 }
 };
 
 const el = (id) => document.getElementById(id);
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function syncPlayerNames() {
+  while (state.playerNames.length < state.players) {
+    state.playerNames.push(`Player ${state.playerNames.length + 1}`);
+  }
+  state.playerNames.length = state.players;
+}
 
 function showToast(message) {
   const existing = document.querySelector(".toast");
@@ -102,6 +117,7 @@ function render() {
   if (state.screen === "instructions") return renderInstructions();
   if (state.screen === "home") return renderHome();
   if (state.screen === "reveal") return renderReveal();
+  if (state.screen === "results") return renderResults();
 }
 
 function renderSplash() {
@@ -110,7 +126,7 @@ function renderSplash() {
       <div class="brand">
         ${mascotSvg(120)}
         <h1>Word imposter</h1>
-        <p class="subtitle">A pass-and-play guessing game</p>
+        <p class="subtitle">A vocabulary-building bluffing game for the whole family</p>
       </div>
       <button class="cta" id="playBtn">Play</button>
       <button class="ghost-btn" id="shareBtn">Share with friends</button>
@@ -157,6 +173,7 @@ function renderHome() {
     <section class="screen home">
       <div class="topbar">
         <button class="icon-btn" id="backSplashBtn" aria-label="Back">←</button>
+        <span class="score-pill">✅ ${state.scores.caught} · 🕵️ ${state.scores.escaped}</span>
         <button class="icon-btn" id="helpBtn" aria-label="How to play">?</button>
       </div>
 
@@ -175,6 +192,11 @@ function renderHome() {
       </div>
 
       <div class="block">
+        <p class="block-label">Player names</p>
+        <div class="name-list" id="nameList"></div>
+      </div>
+
+      <div class="block">
         <p class="block-label">Difficulty</p>
         <div class="mode-toggle" id="modeToggle">
           <button class="mode-btn ${state.difficulty === "easy" ? "active" : ""}" data-mode="easy">
@@ -190,8 +212,27 @@ function renderHome() {
 
       <button class="cta" id="startBtn">Start round</button>
       <p class="footnote">Builds vocabulary while you play</p>
+      ${(state.scores.caught || state.scores.escaped) ? `<button class="ghost-btn" id="resetScoreBtn">Reset score</button>` : ""}
     </section>
   `;
+
+  const nameList = el("nameList");
+  nameList.innerHTML = state.playerNames.map((name, i) => `
+    <input class="name-input" type="text" maxlength="16" value="${escapeHtml(name)}" data-i="${i}" placeholder="Player ${i + 1}" />
+  `).join("");
+  nameList.querySelectorAll(".name-input").forEach((input) => {
+    input.addEventListener("input", () => {
+      const i = parseInt(input.dataset.i, 10);
+      state.playerNames[i] = input.value.trim() || `Player ${i + 1}`;
+    });
+  });
+
+  if (el("resetScoreBtn")) {
+    el("resetScoreBtn").addEventListener("click", () => {
+      state.scores = { caught: 0, escaped: 0 };
+      renderHome();
+    });
+  }
 
   const grid = el("themeGrid");
   grid.innerHTML = WORD_PACKS.map((pack) => `
@@ -222,11 +263,13 @@ function renderHome() {
 
   el("stepDown").addEventListener("click", () => {
     state.players = Math.max(3, state.players - 1);
-    el("playerCount").textContent = state.players;
+    syncPlayerNames();
+    renderHome();
   });
   el("stepUp").addEventListener("click", () => {
     state.players = Math.min(8, state.players + 1);
-    el("playerCount").textContent = state.players;
+    syncPlayerNames();
+    renderHome();
   });
 
   el("modeToggle").querySelectorAll(".mode-btn").forEach((btn) => {
@@ -257,15 +300,13 @@ function renderReveal() {
           <h2>Everyone's ready</h2>
           <p>Give one clue each, then vote on who you think the imposter is.</p>
         </div>
-        <button class="cta" id="newRoundBtn">New round</button>
+        <button class="cta" id="newRoundBtn">Reveal the imposter</button>
         <button class="ghost-btn" id="changeSetupBtn">Change theme or players</button>
         <button class="ghost-btn" id="shareBtn">Share with friends</button>
       </section>
     `;
     el("newRoundBtn").addEventListener("click", () => {
-      const pack = pickPack(state.packId);
-      state.round = buildRound(pack, state.difficulty);
-      state.seenBy = new Array(state.players).fill(false);
+      state.screen = "results";
       render();
     });
     el("changeSetupBtn").addEventListener("click", () => {
@@ -278,7 +319,7 @@ function renderReveal() {
 
   const rows = state.seenBy.map((seen, i) => `
     <button class="player-row ${seen ? "seen" : ""}" data-i="${i}" ${seen ? "disabled" : ""}>
-      <span>Player ${i + 1}</span>
+      <span>${escapeHtml(state.playerNames[i])}</span>
       <span class="row-hint">${seen ? "Revealed" : "Tap to see your word"}</span>
     </button>
   `).join("");
@@ -307,7 +348,7 @@ function renderWordCard() {
     el("app").innerHTML = `
       <section class="screen reveal">
         <div class="word-card imposter-card">
-          <p class="word-card-label">Player ${i + 1}</p>
+          <p class="word-card-label">${escapeHtml(state.playerNames[i])}</p>
           <p class="word-card-value imposter-value">You're the imposter!</p>
           <p class="imposter-hint">You don't get a word. Listen to the clues and bluff your way through.</p>
         </div>
@@ -319,7 +360,7 @@ function renderWordCard() {
     el("app").innerHTML = `
       <section class="screen reveal">
         <div class="word-card">
-          <p class="word-card-label">Player ${i + 1}, your word is</p>
+          <p class="word-card-label">${escapeHtml(state.playerNames[i])}, your word is</p>
           <p class="word-card-value">${word}</p>
         </div>
         <button class="cta" id="hideBtn">Got it, hide word</button>
@@ -332,6 +373,37 @@ function renderWordCard() {
     state.revealedIndex = null;
     render();
   });
+}
+
+function renderResults() {
+  const imposterName = state.playerNames[state.round.imposterIndex];
+  el("app").innerHTML = `
+    <section class="screen reveal">
+      <div class="ready-card">
+        <h2>The imposter was ${escapeHtml(imposterName)}</h2>
+        <p>Did the group catch them?</p>
+      </div>
+      <button class="cta" id="caughtBtn">Caught ✅</button>
+      <button class="cta c-coral" id="escapedBtn">Escaped 🕵️</button>
+    </section>
+  `;
+  el("caughtBtn").addEventListener("click", () => {
+    state.scores.caught++;
+    startNextRound();
+  });
+  el("escapedBtn").addEventListener("click", () => {
+    state.scores.escaped++;
+    startNextRound();
+  });
+}
+
+function startNextRound() {
+  const pack = pickPack(state.packId);
+  state.round = buildRound(pack, state.difficulty);
+  state.seenBy = new Array(state.players).fill(false);
+  state.revealedIndex = null;
+  state.screen = "reveal";
+  render();
 }
 
 function iconGlyph(name) {
