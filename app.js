@@ -8,7 +8,7 @@ const state = {
   round: null,
   revealedIndex: null,
   seenBy: [],
-  scores: { caught: 0, escaped: 0 }
+  scores: { crew: 0, imposter: 0 }
 };
 
 const el = (id) => document.getElementById(id);
@@ -38,7 +38,7 @@ function showToast(message) {
 
 async function shareGame() {
   const shareData = {
-    title: "Word Imposter",
+    title: "Brainbox: Word Imposter",
     text: "One player gets a different word and has to bluff. Free pass-and-play game:",
     url: location.origin + location.pathname
   };
@@ -124,8 +124,9 @@ function renderSplash() {
   el("app").innerHTML = `
     <section class="screen splash">
       <div class="brand">
+        <p class="suite-tag">Brainbox</p>
         ${mascotSvg(120)}
-        <h1>Word imposter</h1>
+        <h1>Word Imposter</h1>
         <p class="subtitle">A vocabulary-building bluffing game for the whole family</p>
       </div>
       <button class="cta" id="playBtn">Play</button>
@@ -173,7 +174,7 @@ function renderHome() {
     <section class="screen home">
       <div class="topbar">
         <button class="icon-btn" id="backSplashBtn" aria-label="Back">←</button>
-        <span class="score-pill">✅ ${state.scores.caught} · 🕵️ ${state.scores.escaped}</span>
+        <span class="score-pill">👥 ${state.scores.crew} · 🕵️ ${state.scores.imposter}</span>
         <button class="icon-btn" id="helpBtn" aria-label="How to play">?</button>
       </div>
 
@@ -212,7 +213,7 @@ function renderHome() {
 
       <button class="cta" id="startBtn">Start round</button>
       <p class="footnote">Builds vocabulary while you play</p>
-      ${(state.scores.caught || state.scores.escaped) ? `<button class="ghost-btn" id="resetScoreBtn">Reset score</button>` : ""}
+      ${(state.scores.crew || state.scores.imposter) ? `<button class="ghost-btn" id="resetScoreBtn">Reset score</button>` : ""}
     </section>
   `;
 
@@ -229,7 +230,7 @@ function renderHome() {
 
   if (el("resetScoreBtn")) {
     el("resetScoreBtn").addEventListener("click", () => {
-      state.scores = { caught: 0, escaped: 0 };
+      state.scores = { crew: 0, imposter: 0 };
       renderHome();
     });
   }
@@ -383,16 +384,21 @@ function renderResults() {
         <h2>The imposter was ${escapeHtml(imposterName)}</h2>
         <p>Did the group catch them?</p>
       </div>
-      <button class="cta" id="caughtBtn">Caught ✅</button>
-      <button class="cta c-coral" id="escapedBtn">Escaped 🕵️</button>
+      <button class="cta" id="caughtBtn">Caught — crew +1</button>
+      <button class="cta c-coral" id="escapedBtn">Escaped — imposter +3</button>
+      <button class="ghost-btn" id="changeSetupBtn">Change theme or players</button>
     </section>
   `;
   el("caughtBtn").addEventListener("click", () => {
-    state.scores.caught++;
+    state.scores.crew += 1;
     startNextRound();
   });
+  el("changeSetupBtn").addEventListener("click", () => {
+    state.screen = "home";
+    render();
+  });
   el("escapedBtn").addEventListener("click", () => {
-    state.scores.escaped++;
+    state.scores.imposter += 3;
     startNextRound();
   });
 }

@@ -110,6 +110,15 @@ h1, h2 {
 .steps li { padding-left: 4px; }
 
 .brand { text-align: center; padding: 4px 0; }
+.suite-tag {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin: 0 0 4px;
+}
 .mascot { width: 92px; height: 92px; margin: 0 auto 6px; display: block; }
 .brand h1 {
   font-size: 28px;

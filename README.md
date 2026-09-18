@@ -1,31 +1,49 @@
-# Party Pack
+# Brainbox: Word Imposter
 
-A growing collection of free pass-and-play games with an educational
-lean — genuinely useful (vocabulary, geography, whatever the next game
-covers) without feeling like homework. No installs, no accounts — open
-a link and play. (Working title — rename freely, it's just "the suite"
-for now.)
+A pass-and-play vocabulary-building bluffing game. One player is secretly
+given a different word or number to everyone else, and has to bluff
+their way through a clue round without getting caught. 11+ vocabulary
+is the default theme (closest to genuinely educational), but it's built
+to be family fun first — the other themes (animals, food, countries,
+movies, numbers) stay just as prominent for players who want pure play
+over the vocabulary angle.
 
-## Structure
-- `index.html`, `hub.css` — the landing page, a directory of games
-- `games/<game-name>/` — each game is a fully standalone static PWA:
-  its own `index.html`, assets, `manifest.json`, and `service-worker.js`.
-  Installing one to a home screen doesn't pull in the others.
+## What's here
+- `index.html`, `styles.css`, `app.js`, `wordpacks.js` — the whole app,
+  no build step, no dependencies
+- `manifest.json`, `service-worker.js`, `icons/` — makes it installable
+  on a phone home screen and usable offline
+- Seven themes: 11+ vocabulary, numbers 0-50, everyday items, animals,
+  food and drink, countries, movies
+- Named players and a running crew-vs-imposter score across rounds,
+  resettable from the setup screen. Catching the imposter is worth 1
+  point to the crew; the imposter escaping is worth 3 — modeled on
+  Spyfall's convention of paying the harder, riskier role more for
+  succeeding (2-4 pts for the spy vs. 1 for the group).
 
-Each game currently keeps its own copy of the shared visual language
-(fonts, color tokens, button styles) rather than importing a shared
-stylesheet. That's deliberate for now — with only one game shipped,
-it's too early to know what should actually be shared. Once a second
-game exists, pull the common pieces into a `shared/` folder based on
-what's actually duplicated, not what's guessed now.
+## Try it locally
+Open a terminal in this folder and run:
 
-## Adding a new game
-1. Create `games/<new-game-name>/` as its own static app (own
-   `manifest.json`, `service-worker.js`, icons — see `games/word-imposter/`
-   as a reference)
-2. Add a card for it to the grid in the root `index.html`
-3. Push — the site redeploys automatically (Netlify, connected to `main`)
+    python3 -m http.server 8000
 
-## Deploy
+Then visit `http://localhost:8000` in a browser.
+
+## Deploy it
 Static site, no build step. Connected to Netlify via GitHub — every
 push to `main` redeploys automatically.
+
+## Install on iPhone
+Once deployed, open the URL in Safari, tap the Share icon, then
+"Add to Home Screen." It'll behave like a normal app icon.
+
+## Adding more themes
+Edit `wordpacks.js` — add a new object to the `WORD_PACKS` array with
+a `pairs` array of `[secretWord, imposterWord]` entries, or copy the
+`numbers` pack shape for a range-based theme.
+
+## Support link
+There's no tip jar wired up right now. To add one back: put a Buy Me a
+Coffee / Ko-fi / Stripe Payment Link URL in a `SUPPORT_URL` constant in
+`app.js`, and add a "Support this app" button next to "How to play" on
+the splash screen (see git history for the previous version). All
+themes stay free either way — no locked content, no paywall.

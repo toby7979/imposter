@@ -5,28 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#6C4CE0" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#14101F" media="(prefers-color-scheme: dark)" />
-<title>Party Pack</title>
-<link rel="stylesheet" href="hub.css" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Imposter" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="manifest" href="manifest.json" />
+<title>Brainbox: Word Imposter</title>
+<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div id="app">
-  <header class="brand">
-    <h1>Party Pack</h1>
-    <p class="subtitle">Free pass-and-play games that sneak in some learning.</p>
-  </header>
-
-  <div class="game-grid">
-    <a class="game-card c-purple" href="games/word-imposter/">
-      <span class="game-name">Word Imposter</span>
-      <span class="game-tag">Builds vocabulary while you bluff your way through a clue round.</span>
-      <span class="game-cta">Play →</span>
-    </a>
-
-    <div class="game-card coming-soon">
-      <span class="game-name">More games soon</span>
-      <span class="game-tag">This pack is just getting started.</span>
-    </div>
-  </div>
-</div>
+<div id="app"></div>
+<script src="wordpacks.js"></script>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+</script>
 </body>
 </html>
