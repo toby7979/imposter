@@ -15,9 +15,11 @@ over the vocabulary angle.
   on a phone home screen and usable offline
 - Seven themes: 11+ vocabulary, numbers 0-50, everyday items, animals,
   food and drink, countries, movies
-- Named players and a running crew-vs-imposter score across rounds,
-  resettable from the setup screen. Catching the imposter is worth 1
-  point to the crew; the imposter escaping is worth 3 — modeled on
+- Named players, each with their own running score across rounds
+  (shown next to their name, resettable from the setup screen). Since
+  who's the imposter changes every round, scoring is per-player, not a
+  team pool: the imposter that round gets +3 for escaping detection;
+  everyone else gets +1 each if the imposter is caught. Modeled on
   Spyfall's convention of paying the harder, riskier role more for
   succeeding (2-4 pts for the spy vs. 1 for the group).
 

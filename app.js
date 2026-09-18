@@ -5,10 +5,10 @@ const state = {
   difficulty: "hard",
   players: 3,
   playerNames: ["Player 1", "Player 2", "Player 3"],
+  playerScores: [0, 0, 0],
   round: null,
   revealedIndex: null,
-  seenBy: [],
-  scores: { crew: 0, imposter: 0 }
+  seenBy: []
 };
 
 const el = (id) => document.getElementById(id);
@@ -24,6 +24,13 @@ function syncPlayerNames() {
     state.playerNames.push(`Player ${state.playerNames.length + 1}`);
   }
   state.playerNames.length = state.players;
+}
+
+function syncPlayerScores() {
+  while (state.playerScores.length < state.players) {
+    state.playerScores.push(0);
+  }
+  state.playerScores.length = state.players;
 }
 
 function showToast(message) {
@@ -174,7 +181,6 @@ function renderHome() {
     <section class="screen home">
       <div class="topbar">
         <button class="icon-btn" id="backSplashBtn" aria-label="Back">←</button>
-        <span class="score-pill">👥 ${state.scores.crew} · 🕵️ ${state.scores.imposter}</span>
         <button class="icon-btn" id="helpBtn" aria-label="How to play">?</button>
       </div>
 
@@ -193,7 +199,7 @@ function renderHome() {
       </div>
 
       <div class="block">
-        <p class="block-label">Player names</p>
+        <p class="block-label">Players &amp; scores</p>
         <div class="name-list" id="nameList"></div>
       </div>
 
@@ -213,13 +219,16 @@ function renderHome() {
 
       <button class="cta" id="startBtn">Start round</button>
       <p class="footnote">Builds vocabulary while you play</p>
-      ${(state.scores.crew || state.scores.imposter) ? `<button class="ghost-btn" id="resetScoreBtn">Reset score</button>` : ""}
+      ${state.playerScores.some((s) => s > 0) ? `<button class="ghost-btn" id="resetScoreBtn">Reset score</button>` : ""}
     </section>
   `;
 
   const nameList = el("nameList");
   nameList.innerHTML = state.playerNames.map((name, i) => `
-    <input class="name-input" type="text" maxlength="16" value="${escapeHtml(name)}" data-i="${i}" placeholder="Player ${i + 1}" />
+    <div class="name-row">
+      <input class="name-input" type="text" maxlength="16" value="${escapeHtml(name)}" data-i="${i}" placeholder="Player ${i + 1}" />
+      <span class="name-score">${state.playerScores[i]} pt${state.playerScores[i] === 1 ? "" : "s"}</span>
+    </div>
   `).join("");
   nameList.querySelectorAll(".name-input").forEach((input) => {
     input.addEventListener("input", () => {
@@ -230,7 +239,7 @@ function renderHome() {
 
   if (el("resetScoreBtn")) {
     el("resetScoreBtn").addEventListener("click", () => {
-      state.scores = { crew: 0, imposter: 0 };
+      state.playerScores = state.playerScores.map(() => 0);
       renderHome();
     });
   }
@@ -265,11 +274,13 @@ function renderHome() {
   el("stepDown").addEventListener("click", () => {
     state.players = Math.max(3, state.players - 1);
     syncPlayerNames();
+    syncPlayerScores();
     renderHome();
   });
   el("stepUp").addEventListener("click", () => {
     state.players = Math.min(8, state.players + 1);
     syncPlayerNames();
+    syncPlayerScores();
     renderHome();
   });
 
@@ -384,13 +395,15 @@ function renderResults() {
         <h2>The imposter was ${escapeHtml(imposterName)}</h2>
         <p>Did the group catch them?</p>
       </div>
-      <button class="cta" id="caughtBtn">Caught — crew +1</button>
+      <button class="cta" id="caughtBtn">Caught — everyone else +1</button>
       <button class="cta c-coral" id="escapedBtn">Escaped — imposter +3</button>
       <button class="ghost-btn" id="changeSetupBtn">Change theme or players</button>
     </section>
   `;
   el("caughtBtn").addEventListener("click", () => {
-    state.scores.crew += 1;
+    state.playerScores = state.playerScores.map((score, idx) =>
+      idx === state.round.imposterIndex ? score : score + 1
+    );
     startNextRound();
   });
   el("changeSetupBtn").addEventListener("click", () => {
@@ -398,7 +411,7 @@ function renderResults() {
     render();
   });
   el("escapedBtn").addEventListener("click", () => {
-    state.scores.imposter += 3;
+    state.playerScores[state.round.imposterIndex] += 3;
     startNextRound();
   });
 }
