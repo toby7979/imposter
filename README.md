@@ -1,8 +1,10 @@
 # Party Pack
 
-A growing collection of free pass-and-play party games. No installs, no
-accounts — open a link and play. (Working title — rename freely, it's
-just "the suite" for now.)
+A growing collection of free pass-and-play games with an educational
+lean — genuinely useful (vocabulary, geography, whatever the next game
+covers) without feeling like homework. No installs, no accounts — open
+a link and play. (Working title — rename freely, it's just "the suite"
+for now.)
 
 ## Structure
 - `index.html`, `hub.css` — the landing page, a directory of games
