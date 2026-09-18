@@ -2,7 +2,7 @@ const state = {
   screen: "splash",
   returnTo: "splash",
   packId: WORD_PACKS[0].id,
-  difficulty: "hard",
+  difficulty: "easy",
   players: 3,
   playerNames: ["Player 1", "Player 2", "Player 3"],
   playerScores: [0, 0, 0],
@@ -338,10 +338,18 @@ function renderReveal() {
 
   el("app").innerHTML = `
     <section class="screen reveal">
+      <div class="topbar">
+        <button class="icon-btn" id="backHomeBtn" aria-label="Back to setup">←</button>
+      </div>
       <p class="pass-hint">Pass the phone to each player in turn</p>
       <div class="player-list">${rows}</div>
     </section>
   `;
+
+  el("backHomeBtn").addEventListener("click", () => {
+    state.screen = "home";
+    render();
+  });
 
   el("app").querySelectorAll(".player-row:not(.seen)").forEach((btn) => {
     btn.addEventListener("click", () => {

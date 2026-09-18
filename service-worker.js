@@ -1,6 +1,6 @@
 // Bump this on every deploy - it's the only thing that busts the cache below,
 // so an unbumped version means installed users never see your changes.
-const CACHE_NAME = "word-imposter-v8";
+const CACHE_NAME = "word-imposter-v9";
 const ASSETS = [
   "./",
   "./index.html",
