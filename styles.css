@@ -447,3 +447,5 @@ h1, h2 {
 .player-row.picked { background: var(--amber); color: var(--ink); box-shadow: 0 5px 0 var(--amber-dark); }
 .player-row.picked .row-hint, .player-row.picked .clue-text { color: var(--ink); }
 .clue-text { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; text-align: right; word-break: break-word; }
+
+.mode-toggle.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }

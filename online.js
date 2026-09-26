@@ -132,7 +132,7 @@ async function createRoom(name) {
     if (!result.committed) continue;
     online.code = code;
     await roomRef().update({
-      meta: { phase: "lobby", round: 0, packId: state.packId, difficulty: state.difficulty, createdAt: serverTime() },
+      meta: { phase: "lobby", round: 0, clueRounds: 2, packId: state.packId, difficulty: state.difficulty, createdAt: serverTime() },
       [`players/${online.uid}`]: { name, joinedAt: serverTime(), connected: true }
     });
     enterRoom(code);
@@ -303,6 +303,20 @@ function activeIds() {
   return orderedIds().filter((id) => players[id].connected !== false);
 }
 
+const clueTotal = (meta) => meta.clueRounds || 2;
+
+function cluesOf(id) {
+  const { meta, clues } = online.data;
+  const c = clues[id];
+  if (!c || c.round !== meta.round || !c.texts) return [];
+  return Object.keys(c.texts).sort().map((k) => c.texts[k]);
+}
+
+function hasClue(id, n) {
+  const c = online.data.clues[id];
+  return !!(c && c.round === online.data.meta.round && c.texts && c.texts[`c${n}`]);
+}
+
 function hostStartRound() {
   const { meta, players } = online.data;
   const ids = orderedIds();
@@ -317,6 +331,8 @@ function hostStartRound() {
     clues: null,
     votes: null,
     "meta/phase": "clue",
+    "meta/clueRound": 1,
+    "meta/clueRounds": clueTotal(meta),
     "meta/round": (meta.round || 0) + 1,
     "meta/result": null,
     hostSecret: { imposterId, secret: round.secretWord, imposterWord: round.imposterWord }
@@ -327,6 +343,13 @@ function hostStartRound() {
       : { word: round.secretWord, blind: false };
   });
   roomUpdate(updates);
+}
+
+function hostAdvanceClue() {
+  const meta = online.data.meta;
+  const n = meta.clueRound || 1;
+  if (n < clueTotal(meta)) roomUpdate({ "meta/clueRound": n + 1 });
+  else hostGoVote();
 }
 
 function hostGoVote() {
@@ -373,11 +396,12 @@ function hostTick() {
   const { meta, clues, votes } = online.data;
   if (!online.isHost || !meta) return;
   const active = activeIds();
-  const key = `${meta.phase}:${meta.round}:${active.join()}:${Object.keys(clues).length}:${Object.keys(votes).length}`;
+  const clueCount = Object.values(clues).reduce((n, c) => n + Object.keys(c.texts || {}).length, 0);
+  const key = `${meta.phase}:${meta.round}:${meta.clueRound}:${active.join()}:${clueCount}:${Object.keys(votes).length}`;
   if (key === online.lastTick) return;
   online.lastTick = key;
-  if (meta.phase === "clue" && active.length && active.every((id) => clues[id] && clues[id].round === meta.round)) {
-    hostGoVote();
+  if (meta.phase === "clue" && active.length && active.every((id) => hasClue(id, meta.clueRound || 1))) {
+    hostAdvanceClue();
   } else if (meta.phase === "vote" && active.length && active.every((id) => votes[id])) {
     hostFinishRound();
   }
@@ -398,7 +422,7 @@ function progress() {
   const { meta, clues, votes } = online.data;
   const ids = activeIds();
   if (meta.phase === "clue") {
-    return { done: ids.filter((id) => clues[id] && clues[id].round === meta.round).length, total: ids.length, noun: "clues" };
+    return { done: ids.filter((id) => hasClue(id, meta.clueRound || 1)).length, total: ids.length, noun: "clues" };
   }
   if (meta.phase === "vote") {
     return { done: ids.filter((id) => votes[id]).length, total: ids.length, noun: "votes" };
@@ -420,11 +444,11 @@ function viewKey() {
   const me = online.uid;
   const parts = [meta.phase, meta.round, online.isHost];
   if (meta.phase === "lobby") {
-    parts.push(meta.packId, meta.difficulty, orderedIds().map((id) => id + players[id].name + players[id].connected).join());
+    parts.push(meta.packId, meta.difficulty, meta.clueRounds, orderedIds().map((id) => id + players[id].name + players[id].connected).join());
   } else if (meta.phase === "clue") {
-    parts.push(!!(clues[me] && clues[me].round === meta.round), word && `${word.word}${word.blind}`);
+    parts.push(meta.clueRound, hasClue(me, meta.clueRound || 1), word && `${word.word}${word.blind}`, orderedIds().map((id) => cluesOf(id).slice(0, (meta.clueRound || 1) - 1).join("~")).join("|"));
   } else if (meta.phase === "vote") {
-    parts.push(votes[me] || "", orderedIds().map((id) => id + (clues[id] ? clues[id].text : "")).join());
+    parts.push(votes[me] || "", orderedIds().map((id) => id + cluesOf(id).join("~")).join());
   } else {
     parts.push(JSON.stringify(meta.result), JSON.stringify(online.data.scores));
   }
@@ -577,10 +601,20 @@ function renderLobby() {
           <p class="block-label">Difficulty</p>
           ${difficultyHtml(meta.difficulty)}
         </div>
+        <div class="block">
+          <p class="block-label">Clue rounds</p>
+          <div class="mode-toggle three" id="roundsToggle">
+            ${[[1, "Quick"], [2, "Classic"], [3, "Thorough"]].map(([n, label]) => `
+              <button class="mode-btn ${clueTotal(meta) === n ? "active" : ""}" data-rounds="${n}">
+                <span class="mode-name">${n}</span>
+                <span class="mode-desc">${label}</span>
+              </button>`).join("")}
+          </div>
+        </div>
         <button class="cta" id="startOnlineBtn" ${canStart ? "" : "disabled"}>${canStart ? "Start round" : `Need ${ONLINE_MIN_PLAYERS}+ players`}</button>
       ` : `
         <p class="pass-hint">Waiting for the host to start…</p>
-        <p class="footnote">${escapeHtml(pack ? pack.name : "")} · ${meta.difficulty === "easy" ? "Easy" : "Hard"}</p>
+        <p class="footnote">${escapeHtml(pack ? pack.name : "")} · ${meta.difficulty === "easy" ? "Easy" : "Hard"} · ${clueTotal(meta)} clue round${clueTotal(meta) === 1 ? "" : "s"}</p>
       `}
     </section>
   `;
@@ -593,28 +627,41 @@ function renderLobby() {
     el("modeToggle").querySelectorAll(".mode-btn").forEach((btn) => {
       btn.addEventListener("click", () => roomUpdate({ "meta/difficulty": btn.dataset.mode }));
     });
+    el("roundsToggle").querySelectorAll(".mode-btn").forEach((btn) => {
+      btn.addEventListener("click", () => roomUpdate({ "meta/clueRounds": Number(btn.dataset.rounds) }));
+    });
     el("startOnlineBtn").addEventListener("click", hostStartRound);
   }
 }
 
 function renderClue() {
-  const { meta, word, clues } = online.data;
+  const { meta, word, players } = online.data;
   const pack = pickPack(meta.packId);
-  const sent = !!(clues[online.uid] && clues[online.uid].round === meta.round);
+  const cr = meta.clueRound || 1;
+  const total = clueTotal(meta);
+  const sent = hasClue(online.uid, cr);
+  let earlier = "";
+  if (cr > 1) {
+    const rows = orderedIds().map((id) => {
+      const list = cluesOf(id).slice(0, cr - 1).map((t) => `“${escapeHtml(t)}”`).join(" · ") || "—";
+      return `<div class="player-row static"><span>${escapeHtml(players[id].name)}${id === online.uid ? " (you)" : ""}</span><span class="clue-text">${list}</span></div>`;
+    }).join("");
+    earlier = `<div class="block"><p class="block-label">Clues so far</p><div class="player-list">${rows}</div></div>`;
+  }
   let card;
   if (!word) {
     card = `<div class="word-card"><p class="word-card-value">…</p></div>`;
   } else if (word.blind) {
     card = `
       <div class="word-card imposter-card">
-        <p class="word-card-label">Round ${meta.round}</p>
+        <p class="word-card-label">Round ${meta.round} · clue ${cr} of ${total}</p>
         <p class="word-card-value imposter-value">You're the imposter!</p>
         <p class="imposter-hint">You don't get a word. Bluff a clue that fits the theme, then watch for slip-ups.</p>
       </div>`;
   } else {
     card = `
       <div class="word-card">
-        <p class="word-card-label">Round ${meta.round} · your word is</p>
+        <p class="word-card-label">Round ${meta.round} · clue ${cr} of ${total} · your word is</p>
         <p class="word-card-value">${escapeHtml(word.word || "")}</p>
       </div>`;
   }
@@ -622,6 +669,7 @@ function renderClue() {
     <section class="screen reveal">
       ${card}
       <p class="footnote">Theme: ${escapeHtml(pack ? pack.name : "")}</p>
+      ${earlier}
       ${sent ? `
         <div class="ready-card">
           <span class="ready-icon" aria-hidden="true">${iconGlyph("check")}</span>
@@ -638,12 +686,14 @@ function renderClue() {
     </section>
   `;
   bindLeave();
-  if (online.isHost) el("skipBtn").addEventListener("click", hostGoVote);
+  if (online.isHost) el("skipBtn").addEventListener("click", hostAdvanceClue);
   if (!sent) {
     const send = () => {
       const text = el("clueInput").value.replace(/\s+/g, " ").trim().slice(0, 30);
       if (!text) return;
-      roomRef(`clues/${online.uid}`).set({ text, round: meta.round }).catch(() => showToast("Couldn't send, try again."));
+      roomRef(`clues/${online.uid}`)
+        .update({ round: meta.round, [`texts/c${cr}`]: text })
+        .catch(() => showToast("Couldn't send, try again."));
     };
     el("sendClueBtn").addEventListener("click", send);
     el("clueInput").addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
@@ -651,10 +701,11 @@ function renderClue() {
 }
 
 function renderVote() {
-  const { meta, players, clues, votes } = online.data;
+  const { players, votes } = online.data;
   const mine = votes[online.uid];
   const rows = orderedIds().map((id) => {
-    const clue = clues[id] && clues[id].round === meta.round ? `“${escapeHtml(clues[id].text)}”` : "—";
+    const list = cluesOf(id);
+    const clue = list.length ? list.map((t) => `“${escapeHtml(t)}”`).join(" · ") : "—";
     const name = escapeHtml(players[id].name);
     if (id === online.uid) {
       return `<div class="player-row static"><span>${name} (you)</span><span class="clue-text">${clue}</span></div>`;

@@ -27,9 +27,11 @@ over the vocabulary angle.
 Everyone plays on their own phone. The host creates a room (4-letter
 code, or an invite link with `?room=CODE`), friends join, and each
 player privately sees their own word. Everyone types a clue, all clues
-are revealed together, everyone votes, and the same per-player scoring
-applies (+3 for an imposter who escapes, +1 to everyone else if caught;
-a tied vote lets the imposter escape).
+are revealed together, then everyone types a second clue (the host picks
+1-3 clue rounds, default 2) with the earlier clues visible. Then everyone
+votes, and the same per-player scoring applies (+3 for an imposter who
+escapes, +1 to everyone else if caught; a tied vote lets the imposter
+escape).
 
 How it works:
 - `online.js` — rooms, phases (lobby, clue, vote, result) and the host's

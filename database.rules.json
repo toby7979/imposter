@@ -30,7 +30,18 @@
           ".write": "auth != null && root.child('rooms').child($room).child('host').val() === auth.uid",
           "$pid": {
             ".write": "auth != null && $pid === auth.uid",
-            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 30 && newData.child('round').isNumber()"
+            ".validate": "newData.child('round').isNumber() && newData.child('texts').hasChildren()",
+            "round": {
+              ".validate": "newData.isNumber()"
+            },
+            "texts": {
+              "$c": {
+                ".validate": "newData.isString() && newData.val().length <= 30"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
         "votes": {
