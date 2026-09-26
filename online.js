@@ -484,6 +484,8 @@ function renderOnlineMenu() {
   const busy = (on) => {
     el("createBtn").disabled = on;
     el("joinBtn").disabled = on;
+    el("createBtn").textContent = on ? "Connecting…" : "Create a room";
+    el("joinBtn").textContent = on ? "Connecting…" : "Join room";
   };
   const readName = () => {
     online.name = cleanName(el("onlineName").value);
