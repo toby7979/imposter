@@ -43,12 +43,15 @@ function showToast(message) {
   setTimeout(() => toast.remove(), 2200);
 }
 
-async function shareGame() {
-  const shareData = {
+function shareGame() {
+  return shareLink({
     title: "Brainbox: Word Imposter",
     text: "One player gets a different word and has to bluff. Free pass-and-play game:",
     url: location.origin + location.pathname
-  };
+  });
+}
+
+async function shareLink(shareData) {
   if (navigator.share) {
     try {
       await navigator.share(shareData);
@@ -76,8 +79,8 @@ function pickPack(id) {
   return WORD_PACKS.find((p) => p.id === id);
 }
 
-function buildRound(pack, difficulty) {
-  const imposterIndex = randInt(0, state.players - 1);
+function buildRound(pack, difficulty, playerCount = state.players) {
+  const imposterIndex = randInt(0, playerCount - 1);
   if (pack.type === "pairs") {
     const pair = pack.pairs[randInt(0, pack.pairs.length - 1)];
     return {
@@ -125,6 +128,33 @@ function render() {
   if (state.screen === "home") return renderHome();
   if (state.screen === "reveal") return renderReveal();
   if (state.screen === "results") return renderResults();
+  if (state.screen.startsWith("online-")) return renderOnline();
+}
+
+function themeTilesHtml(selectedId) {
+  return WORD_PACKS.map((pack) => `
+    <button class="theme-tile c-${pack.color} ${pack.id === selectedId ? "selected" : ""}" data-id="${pack.id}">
+      ${pack.id === selectedId ? `<span class="tile-check" aria-hidden="true">${iconGlyph("check")}</span>` : ""}
+      <span class="tile-icon" aria-hidden="true">${iconGlyph(pack.icon)}</span>
+      <span class="tile-name">${pack.name}</span>
+      <span class="tile-tag">${pack.tagline}</span>
+    </button>
+  `).join("");
+}
+
+function difficultyHtml(difficulty) {
+  return `
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn ${difficulty === "easy" ? "active" : ""}" data-mode="easy">
+        <span class="mode-name">Easy</span>
+        <span class="mode-desc">Imposter is told, gets no word</span>
+      </button>
+      <button class="mode-btn ${difficulty === "hard" ? "active" : ""}" data-mode="hard">
+        <span class="mode-name">Hard</span>
+        <span class="mode-desc">Imposter gets a close alternate word</span>
+      </button>
+    </div>
+  `;
 }
 
 function renderSplash() {
@@ -136,7 +166,8 @@ function renderSplash() {
         <h1>Word Imposter</h1>
         <p class="subtitle">A vocabulary-building bluffing game for the whole family</p>
       </div>
-      <button class="cta" id="playBtn">Play</button>
+      <button class="cta" id="playBtn">Pass &amp; play</button>
+      <button class="cta c-purple" id="onlineBtn">Play online</button>
       <button class="ghost-btn" id="shareBtn">Share with friends</button>
       <button class="ghost-btn" id="howToBtn">How to play</button>
     </section>
@@ -145,7 +176,11 @@ function renderSplash() {
     state.screen = "home";
     render();
   });
-  el("shareBtn").addEventListener("click", shareGame);
+  el("onlineBtn").addEventListener("click", () => {
+    state.screen = "online-menu";
+    render();
+  });
+  el("shareBtn").addEventListener("click", () => shareGame());
   el("howToBtn").addEventListener("click", () => {
     state.returnTo = "splash";
     state.screen = "instructions";
@@ -205,16 +240,7 @@ function renderHome() {
 
       <div class="block">
         <p class="block-label">Difficulty</p>
-        <div class="mode-toggle" id="modeToggle">
-          <button class="mode-btn ${state.difficulty === "easy" ? "active" : ""}" data-mode="easy">
-            <span class="mode-name">Easy</span>
-            <span class="mode-desc">Imposter is told, gets no word</span>
-          </button>
-          <button class="mode-btn ${state.difficulty === "hard" ? "active" : ""}" data-mode="hard">
-            <span class="mode-name">Hard</span>
-            <span class="mode-desc">Imposter gets a close alternate word</span>
-          </button>
-        </div>
+        ${difficultyHtml(state.difficulty)}
       </div>
 
       <button class="cta" id="startBtn">Start round</button>
@@ -245,14 +271,7 @@ function renderHome() {
   }
 
   const grid = el("themeGrid");
-  grid.innerHTML = WORD_PACKS.map((pack) => `
-    <button class="theme-tile c-${pack.color} ${pack.id === state.packId ? "selected" : ""}" data-id="${pack.id}">
-      ${pack.id === state.packId ? `<span class="tile-check" aria-hidden="true">${iconGlyph("check")}</span>` : ""}
-      <span class="tile-icon" aria-hidden="true">${iconGlyph(pack.icon)}</span>
-      <span class="tile-name">${pack.name}</span>
-      <span class="tile-tag">${pack.tagline}</span>
-    </button>
-  `).join("");
+  grid.innerHTML = themeTilesHtml(state.packId);
 
   grid.querySelectorAll(".theme-tile").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -325,7 +344,7 @@ function renderReveal() {
       state.screen = "home";
       render();
     });
-    el("shareBtn").addEventListener("click", shareGame);
+    el("shareBtn").addEventListener("click", () => shareGame());
     return;
   }
 
@@ -483,3 +502,4 @@ function iconGlyph(name) {
 }
 
 render();
+onlineResume();

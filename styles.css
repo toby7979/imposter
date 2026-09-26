@@ -424,3 +424,26 @@ h1, h2 {
   animation: toastIn 0.25s ease;
   z-index: 100;
 }
+
+.cta.c-purple { background: var(--purple); box-shadow: 0 6px 0 var(--purple-dark); }
+.cta.c-purple:active { box-shadow: 0 2px 0 var(--purple-dark); }
+.cta:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.room-code { font-size: 46px; letter-spacing: 10px; padding-left: 10px; }
+.code-input {
+  text-align: center;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+}
+.footnote.error { color: var(--coral-dark); font-weight: 600; min-height: 1em; }
+@media (prefers-color-scheme: dark) { .footnote.error { color: var(--coral); } }
+
+.player-row.static { cursor: default; }
+.player-row.static:active { transform: none; box-shadow: 0 5px 0 var(--surface-border); }
+.player-row { gap: 12px; }
+.player-row.picked { background: var(--amber); color: var(--ink); box-shadow: 0 5px 0 var(--amber-dark); }
+.player-row.picked .row-hint, .player-row.picked .clue-text { color: var(--ink); }
+.clue-text { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; text-align: right; word-break: break-word; }

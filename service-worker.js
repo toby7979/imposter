@@ -1,12 +1,14 @@
 // Bump this on every deploy - it's the only thing that busts the cache below,
 // so an unbumped version means installed users never see your changes.
-const CACHE_NAME = "word-imposter-v10";
+const CACHE_NAME = "word-imposter-v11";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./wordpacks.js",
+  "./firebase-config.js",
+  "./online.js",
   "./manifest.json"
 ];
 

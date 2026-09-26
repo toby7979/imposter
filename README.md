@@ -23,6 +23,30 @@ over the vocabulary angle.
   Spyfall's convention of paying the harder, riskier role more for
   succeeding (2-4 pts for the spy vs. 1 for the group).
 
+## Online mode
+Everyone plays on their own phone. The host creates a room (4-letter
+code, or an invite link with `?room=CODE`), friends join, and each
+player privately sees their own word. Everyone types a clue, all clues
+are revealed together, everyone votes, and the same per-player scoring
+applies (+3 for an imposter who escapes, +1 to everyone else if caught;
+a tied vote lets the imposter escape).
+
+How it works:
+- `online.js` — rooms, phases (lobby, clue, vote, result) and the host's
+  game logic. Firebase is loaded lazily, so pass-and-play works offline.
+- `firebase-config.js` — public web config for the Firebase project.
+- `database.rules.json` — Realtime Database security rules. Publish
+  changes from the Firebase console (Realtime Database, Rules). They
+  stop players reading each other's words and stop non-hosts editing
+  game state; sign-in is anonymous, one identity per browser tab.
+- The host's phone runs the game (deals words, advances phases, tallies
+  votes), so it needs to stay open. If the host leaves, the room closes.
+  Refreshing a page rejoins the same room.
+
+Known limits: a technical player could read the imposter from the host's
+phone (fixing that needs a server function), and abandoned rooms are not
+cleaned up automatically yet.
+
 ## Try it locally
 Open a terminal in this folder and run:
 
