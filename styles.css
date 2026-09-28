@@ -114,16 +114,16 @@ h1, h2 {
 }
 .mascot { width: 96px; height: 96px; margin: 0 auto 6px; display: block; animation: mascotBounce 2.6s ease-in-out infinite; }
 .brand h1 {
-  font-size: 54px;
-  line-height: 0.95;
+  font-size: 78px;
+  line-height: 0.92;
   color: var(--coral);
-  text-shadow: 0 5px 0 var(--coral-dark);
+  text-shadow: 0 7px 0 var(--coral-dark);
   letter-spacing: 0.5px;
   padding: 0 6px;
 }
 @keyframes letterWobble {
   0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
-  50% { transform: translateY(-10px) rotate(calc(var(--tilt, 0deg) * -1)); }
+  50% { transform: translateY(-15px) rotate(calc(var(--tilt, 0deg) * -1)); }
 }
 .wobbly-word { display: inline-block; white-space: nowrap; }
 .wobbly-letter {
