@@ -107,11 +107,26 @@ function buildRound(pack, difficulty, playerCount = state.players) {
   };
 }
 
-function mascotSvg(size) {
+function mascotSvg(size, variant = "default") {
+  const skin = variant === "kid" ? "#FFB877" : "#FF9457";
+  const hair = {
+    default: `<path d="M42 88a58 40 0 01116 0z" fill="#2B2140"/>`,
+    girl: `
+      <path d="M42 90a58 40 0 01116 0z" fill="#2B2140"/>
+      <circle cx="34" cy="102" r="17" fill="#2B2140"/>
+      <circle cx="166" cy="102" r="17" fill="#2B2140"/>
+      <circle cx="34" cy="90" r="8" fill="#FF6FB0"/>
+      <circle cx="166" cy="90" r="8" fill="#FF6FB0"/>
+    `,
+    kid: `
+      <path d="M50 92a50 34 0 01100 0z" fill="#2B2140"/>
+      <path d="M92 60q8-22 20-10" fill="none" stroke="#2B2140" stroke-width="9" stroke-linecap="round"/>
+    `
+  }[variant] || `<path d="M42 88a58 40 0 01116 0z" fill="#2B2140"/>`;
   return `
     <svg class="mascot" width="${size}" height="${size}" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <ellipse cx="100" cy="120" rx="66" ry="70" fill="#FF9457" stroke="#241C3D" stroke-width="6"/>
-      <path d="M42 88a58 40 0 01116 0z" fill="#2B2140"/>
+      <ellipse cx="100" cy="120" rx="66" ry="70" fill="${skin}" stroke="#241C3D" stroke-width="6"/>
+      ${hair}
       <rect x="38" y="112" width="124" height="34" rx="16" fill="#2B2140"/>
       <circle cx="74" cy="129" r="15" fill="#FFFFFF"/>
       <circle cx="126" cy="129" r="15" fill="#FFFFFF"/>
@@ -175,7 +190,11 @@ function renderSplash() {
     <section class="screen splash">
       <div class="brand">
         <p class="suite-tag">Brainbox</p>
-        ${mascotSvg(120)}
+        <div class="mascot-group">
+          ${mascotSvg(78, "girl")}
+          ${mascotSvg(120, "default")}
+          ${mascotSvg(78, "kid")}
+        </div>
         <h1 class="wobbly">${wobblyTitle("Word Imposter")}</h1>
         <p class="subtitle">A vocabulary-building bluffing game for the whole family</p>
       </div>
