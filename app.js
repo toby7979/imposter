@@ -157,13 +157,26 @@ function difficultyHtml(difficulty) {
   `;
 }
 
+function wobblyTitle(text) {
+  let i = 0;
+  return text.split(" ").map((word) => {
+    const letters = [...word].map((ch) => {
+      const delay = (i * 0.09).toFixed(2);
+      const tilt = i % 2 === 0 ? -8 : 8;
+      i++;
+      return `<span class="wobbly-letter" style="animation-delay:${delay}s; --tilt:${tilt}deg">${escapeHtml(ch)}</span>`;
+    }).join("");
+    return `<span class="wobbly-word">${letters}</span>`;
+  }).join(" ");
+}
+
 function renderSplash() {
   el("app").innerHTML = `
     <section class="screen splash">
       <div class="brand">
         <p class="suite-tag">Brainbox</p>
         ${mascotSvg(120)}
-        <h1>Word Imposter</h1>
+        <h1 class="wobbly">${wobblyTitle("Word Imposter")}</h1>
         <p class="subtitle">A vocabulary-building bluffing game for the whole family</p>
       </div>
       <button class="cta" id="playBtn">Pass &amp; play</button>
