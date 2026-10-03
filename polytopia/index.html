@@ -298,7 +298,7 @@ const store = {
   set(k, v) { try { localStorage.setItem("polypick:" + k, JSON.stringify(v)); } catch {} },
 };
 const state = {
-  opp: store.get("opp", 2),
+  opp: store.get("opp1v1", 1),
   type: store.get("type", "continents"),
   size: store.get("size", "normal"),
   owned: new Set(store.get("owned", TRIBES.map(t => t.id))),
@@ -683,7 +683,7 @@ $("setup").addEventListener("change", e => {
     el.checked ? state.owned.add(el.value) : state.owned.delete(el.value);
     renderOwned();
   }
-  store.set("opp", state.opp); store.set("type", state.type); store.set("size", state.size);
+  store.set("opp1v1", state.opp); store.set("type", state.type); store.set("size", state.size);
   store.set("owned", [...state.owned]);
   render();
 });
