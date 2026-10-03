@@ -158,6 +158,22 @@ details.owned .seg { margin-top: 10px; }
 .stars { color: var(--gold); letter-spacing: 2px; font-size: .9rem; }
 .why { margin: 6px 0 0; padding-left: 18px; font-size: .88rem; font-weight: 600; }
 .why li { margin: 2px 0; }
+.warn {
+  margin-top: 8px;
+  padding: 6px 10px 6px 30px;
+  border-radius: 8px;
+  background: rgba(255, 201, 60, .14);
+  color: var(--gold);
+  font-size: .88rem;
+  position: relative;
+}
+.warn::before {
+  content: "!";
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--gold); color: var(--tier-ink);
+  font-size: .75rem; font-weight: 800; text-align: center; line-height: 16px;
+}
 .empty { color: var(--muted); }
 footer { color: var(--muted); font-size: .8rem; font-weight: 600; text-align: center; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -299,8 +315,24 @@ function reasons(r) {
   return out;
 }
 
+// Player picks: fixed top spots for setups where experience beats the scores.
+// Pinned tribes go first in this order and fill the S tier; everything else keeps its scored order.
+const PLAYER_PICKS = [
+  { type: "drylands", sizes: ["tiny"], top: ["oumaji", "yadakk"],
+    warn: { oumaji: "Watch out: Vengir can counter Oumaji on this map." } },
+  { type: "waterworld", sizes: ["tiny", "small"], top: ["polaris", "aquarion"] },
+  { type: "waterworld", sizes: ["normal", "large", "huge", "massive"], top: ["aquarion", "polaris"] },
+];
+function playerPick() {
+  return PLAYER_PICKS.find(p => p.type === state.type && p.sizes.includes(state.size));
+}
+
 function ranking() {
-  return TRIBES.filter(t => state.owned.has(t.id)).map(scoreTribe).sort((a, b) => b.total - a.total);
+  const scored = TRIBES.filter(t => state.owned.has(t.id)).map(scoreTribe).sort((a, b) => b.total - a.total);
+  const pick = playerPick();
+  if (!pick) return { ranked: scored, pinned: 0, warn: {} };
+  const pinned = pick.top.map(id => scored.find(r => r.t.id === id)).filter(Boolean);
+  return { ranked: [...pinned, ...scored.filter(r => !pinned.includes(r))], pinned: pinned.length, warn: pick.warn || {} };
 }
 
 // ---------- Low-poly preview island ----------
@@ -514,14 +546,16 @@ function renderOwned() {
 }
 
 function render() {
-  const ranked = ranking();
+  const { ranked, pinned, warn } = ranking();
   drawMap(ranked[0] && ranked[0].t);
   if (!ranked.length) {
     $("results").innerHTML = `<p class="empty">Pick at least one tribe you own to see a ranking.</p>`;
     return;
   }
   // S tier: always the top pick, plus the runner-up only if it's genuinely close. Never more than two.
-  const sCount = ranked.length > 1 && ranked[0].total - ranked[1].total <= 0.6 ? 2 : 1;
+  // Player picks fill the S tier instead.
+  const sCount = pinned ? Math.min(pinned, 2)
+    : ranked.length > 1 && ranked[0].total - ranked[1].total <= 0.6 ? 2 : 1;
   const rest = ranked.slice(sCount);
   const tiers = [
     ["S", ranked.slice(0, sCount)],
@@ -538,7 +572,9 @@ function render() {
         ${list.map(r => {
           rank++;
           const top = tier === "S";
-          const why = top ? `<ul class="why">${reasons(r).map(x => `<li>${x}</li>`).join("")}</ul>` : "";
+          const lines = pinned && top ? ["Player pick for this map type and size."] : reasons(r);
+          const why = top ? `<ul class="why">${lines.map(x => `<li>${x}</li>`).join("")}</ul>` : "";
+          const caution = warn[r.t.id] ? `<div class="warn">${warn[r.t.id]}</div>` : "";
           return `<div class="tribe">
             <div class="badge" style="--c:${shade(r.t.c, -0.45)}">${headSVG(r.t)}</div>
             <div class="body">
@@ -546,6 +582,7 @@ function render() {
               <div class="name">${r.t.name}</div>
               <div class="note">${r.t.note}</div>
               ${why}
+              ${caution}
             </div>
             <div class="rank">#${rank}</div>
           </div>`;
