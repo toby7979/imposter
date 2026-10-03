@@ -51,91 +51,103 @@ body {
 }
 h1, h2 { font-weight: 300; margin: 0; }
 
-/* Work-in-progress banner */
-.wip { background: var(--card); border-radius: 16px; overflow: hidden; text-align: center; }
-.wip-stripes { height: 7px; background: repeating-linear-gradient(-45deg, var(--gold) 0 7px, #000 7px 14px); }
-.wip-body { padding: 10px 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.wip h2 { font-size: 1.4rem; text-transform: uppercase; letter-spacing: .04em; color: var(--gold); }
-.wip p { margin: 0; max-width: 40ch; }
+/* Work-in-progress banner: one compact strip */
+.wip {
+  background: var(--card); border-radius: 12px; overflow: hidden;
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px;
+  border-top: 5px solid transparent;
+  border-image: repeating-linear-gradient(-45deg, var(--gold) 0 6px, #000 6px 12px) 5;
+  border-bottom: 0; border-left: 0; border-right: 0;
+}
+.wip-text { flex: 1; min-width: 0; font-size: .82rem; }
+.wip h2 { display: inline; font-size: .9rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--gold); }
 .wip-btn {
-  display: inline-block; text-decoration: none; text-transform: uppercase;
-  background: var(--blue); color: #fff; font-weight: 400; font-size: 1.05rem;
-  padding: 8px 18px 6px; border-radius: 12px; box-shadow: 0 3px 0 var(--blue-edge);
+  flex: none; text-decoration: none; text-transform: uppercase; text-align: center;
+  background: var(--blue); color: #fff; font-weight: 600; font-size: .8rem; line-height: 1.1;
+  padding: 8px 12px 6px; border-radius: 10px; box-shadow: 0 3px 0 var(--blue-edge);
 }
 .wip-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--blue-edge); }
 .wip-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-.wip-note { font-size: .8rem; color: var(--muted); }
 
-header { text-align: center; padding-top: 4px; }
-header h1 { font-size: 2rem; text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
-header p { margin: 2px 0 0; font-style: italic; font-weight: 600; font-size: .95rem; }
+header { text-align: center; }
+header h1 { font-size: 1.5rem; text-transform: uppercase; letter-spacing: .02em; }
+header p { margin: 0; font-style: italic; font-weight: 600; font-size: .85rem; }
 
 /* Setup bands */
-.panel { display: flex; flex-direction: column; gap: 6px; margin-inline: -16px; }
+.panel { display: flex; flex-direction: column; gap: 4px; margin-inline: -16px; }
+.band-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 fieldset, details.owned {
   border: 0; margin: 0; min-width: 0;
   background: var(--band);
-  padding: 8px 16px 10px;
+  padding: 6px 12px 8px;
   text-align: center;
 }
-legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; font-style: italic; font-weight: 600; font-size: 1.1rem; }
-.seg { clear: both; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 6px; }
+legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; font-style: italic; font-weight: 600; font-size: .95rem; }
+.seg { clear: both; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
 .seg label {
   cursor: pointer; user-select: none;
-  padding: 6px 12px 3px; border-radius: 12px;
-  font-size: 1.15rem; font-weight: 300;
+  min-width: 2.2em; text-align: center;
+  padding: 6px 10px 4px; border-radius: 10px;
+  font-size: .95rem; font-weight: 400;
+  background: rgba(255,255,255,.14);
+  border: 1.5px solid rgba(255,255,255,.55);
   transition: background .12s, color .12s;
 }
-.seg label small { font-size: .7em; opacity: .8; margin-left: 4px; font-variant-numeric: tabular-nums; }
-.seg input:checked + label { background: #fff; color: var(--pill-ink); font-weight: 400; }
-.seg input:focus-visible + label { outline: 2px solid #fff; outline-offset: 2px; }
-details.owned summary { cursor: pointer; font-style: italic; font-weight: 600; font-size: 1rem; }
-details.owned .seg label { font-size: .95rem; }
+.seg label:hover { background: rgba(255,255,255,.28); }
+.seg label small { font-size: .75em; opacity: .75; margin-left: 3px; font-variant-numeric: tabular-nums; }
+.seg input:checked + label {
+  background: #fff; color: var(--pill-ink); border-color: #fff; font-weight: 600;
+  box-shadow: 0 2px 0 rgba(0,0,0,.25);
+}
+.seg input:checked + label small { opacity: .6; }
+.seg input:focus-visible + label { outline: 2px solid var(--gold); outline-offset: 2px; }
+details.owned summary { cursor: pointer; font-style: italic; font-weight: 600; font-size: .9rem; }
+details.owned .seg label { font-size: .85rem; }
 details.owned .seg { margin-top: 6px; }
 .owned-actions { display: flex; justify-content: center; gap: 16px; margin-top: 6px; }
-.linkbtn { background: none; border: 0; padding: 0; cursor: pointer; color: #fff; font: inherit; font-style: italic; font-weight: 600; text-decoration: underline; }
+.linkbtn { background: none; border: 0; padding: 0; cursor: pointer; color: #fff; font: inherit; font-style: italic; font-weight: 600; font-size: .85rem; text-decoration: underline; }
 
 /* Results */
-.results { display: flex; flex-direction: column; gap: 12px; }
+.results { display: flex; flex-direction: column; gap: 8px; }
 .tier-head {
-  text-align: center; font-style: italic; font-weight: 600; font-size: 1.15rem;
-  margin-bottom: 6px; text-shadow: 0 1px 2px rgba(0,0,0,.25);
+  text-align: center; font-style: italic; font-weight: 600; font-size: .95rem;
+  margin-bottom: 3px; text-shadow: 0 1px 2px rgba(0,0,0,.3);
 }
 .tier-head span { color: var(--t); }
 .tier[data-t="1"] { --t: var(--tier-1); } .tier[data-t="2"] { --t: var(--tier-2); } .tier[data-t="3"] { --t: var(--tier-3); }
 .tier[data-t="4"] { --t: var(--tier-4); } .tier[data-t="5"] { --t: var(--tier-5); } .tier[data-t="6"] { --t: var(--tier-6); }
 .tier[data-t="7"] { --t: var(--tier-7); }
-.tier-list { display: flex; flex-direction: column; gap: 6px; }
+.tier-list { display: flex; flex-direction: column; gap: 4px; }
 .tribe {
-  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
-  background: var(--card); border-radius: 14px; padding: 8px 12px;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  background: var(--card); border-radius: 10px; padding: 5px 10px;
   border-left: 4px solid var(--t);
 }
-.tribe .body { min-width: 0; }
-.tribe .name { font-size: 1.15rem; font-weight: 400; text-transform: uppercase; letter-spacing: .02em; }
-.tribe .note { color: var(--muted); font-size: .85rem; }
-.tribe .rank { color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
-.badge { width: 46px; height: 46px; border-radius: 50%; display: block; background: var(--blue); }
-.tribe.top { padding: 12px 14px; border-left: 0; box-shadow: inset 0 0 0 2px var(--gold); }
-.tribe.top .badge { width: 62px; height: 62px; }
-.tribe.top .name { font-size: 1.6rem; font-weight: 300; }
-.stars { color: var(--gold); font-size: 1.1rem; letter-spacing: 3px; text-shadow: 0 1px 0 #b07800; }
+.tribe .body { min-width: 0; font-size: .8rem; line-height: 1.25; }
+.tribe .name { font-size: .95rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; margin-right: 6px; }
+.tribe .note { color: var(--muted); }
+.tribe .rank { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.badge { width: 34px; height: 34px; border-radius: 50%; display: block; background: var(--blue); }
+.tribe.top { padding: 8px 10px; border-left: 0; box-shadow: inset 0 0 0 2px var(--gold); }
+.tribe.top .badge { width: 48px; height: 48px; }
+.tribe.top .name { display: block; font-size: 1.2rem; font-weight: 400; }
+.stars { color: var(--gold); font-size: .8rem; letter-spacing: 2px; }
 .pick {
-  background: var(--blue); color: #fff; text-transform: uppercase; font-weight: 400; font-size: .85rem;
-  padding: 6px 10px 4px; border-radius: 10px; white-space: nowrap;
+  background: var(--blue); color: #fff; text-transform: uppercase; font-weight: 600; font-size: .7rem;
+  padding: 5px 8px 3px; border-radius: 8px; white-space: nowrap;
 }
-.why { margin: 4px 0 0; padding-left: 16px; font-size: .85rem; }
-.why li { margin: 2px 0; }
-.warn, .tip { margin-top: 6px; padding: 5px 8px 3px; border-radius: 8px; font-size: .85rem; font-weight: 400; }
+.why { margin: 3px 0 0; padding-left: 14px; }
+.why li { margin: 1px 0; }
+.warn, .tip { margin-top: 4px; padding: 4px 7px 2px; border-radius: 6px; font-weight: 400; }
 .warn { background: rgba(255, 203, 47, .16); color: var(--gold); }
 .warn::before { content: "! "; font-weight: 600; }
 .tip { background: rgba(121, 221, 90, .16); color: var(--green); }
 .tip::before { content: "\2605  "; }
-.empty, .source { margin: 0; text-align: center; font-style: italic; font-weight: 600; font-size: .85rem; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.empty, .source { margin: 0; text-align: center; font-style: italic; font-weight: 600; font-size: .78rem; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
 footer {
-  text-align: center; font-size: .8rem; color: #fff;
-  background: rgba(0,0,0,.55); border-radius: 12px; padding: 10px 12px 8px;
+  text-align: center; font-size: .72rem; color: #fff;
+  background: rgba(0,0,0,.55); border-radius: 10px; padding: 8px 10px 6px;
 }
 footer a { color: #8fd0ff; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -156,30 +168,26 @@ footer a { color: #8fd0ff; }
 
 <div class="wrap">
   <section class="wip" id="wip" aria-labelledby="wip-title">
-    <div class="wip-stripes" aria-hidden="true"></div>
-    <div class="wip-body">
-      <h2 id="wip-title">Work in progress</h2>
-      <p>Tiers and tips are still being tuned. Think a tribe is in the wrong place? Tell us.</p>
-      <a class="wip-btn" id="suggest" href="https://forms.gle/5PyaQowQpJ5NSRXq9" target="_blank" rel="noopener">Submit a suggestion</a>
-      <p class="wip-note">Opens a short Google Form. No sign-in needed.</p>
-    </div>
-    <div class="wip-stripes" aria-hidden="true"></div>
+    <div class="wip-text"><h2 id="wip-title">Work in progress.</h2> Think a tribe is in the wrong place? Tell us in a quick form, no sign-in needed.</div>
+    <a class="wip-btn" id="suggest" href="https://forms.gle/5PyaQowQpJ5NSRXq9" target="_blank" rel="noopener">Suggest</a>
   </section>
 
   <header>
     <h1>Tribe Picker</h1>
-    <p>Set up your game. Best tribe for it comes out on top.</p>
+    <p>Set up your game. The best tribe comes out on top.</p>
   </header>
 
   <form class="panel" id="setup" onsubmit="return false">
-    <fieldset>
-      <legend>Game mode</legend>
-      <div class="seg" id="mode"></div>
-    </fieldset>
-    <fieldset>
-      <legend>Opponents</legend>
-      <div class="seg" id="opp"></div>
-    </fieldset>
+    <div class="band-row">
+      <fieldset>
+        <legend>Game mode</legend>
+        <div class="seg" id="mode"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Opponents</legend>
+        <div class="seg" id="opp"></div>
+      </fieldset>
+    </div>
     <fieldset>
       <legend>Map type</legend>
       <div class="seg" id="type"></div>
@@ -401,7 +409,7 @@ function segButtons(container, name, items, current, labelFn) {
 }
 
 function renderControls() {
-  segButtons($("mode"), "mode", MODES, state.mode, m => `${m.label}<small>${m.hint}</small>`);
+  segButtons($("mode"), "mode", MODES, state.mode, m => m.label);
   segButtons($("opp"), "opp", OPPONENTS, state.opp, o => o.label);
   segButtons($("type"), "type", MAP_TYPES, state.type, m => m.label);
   segButtons($("size"), "size", SIZES, state.size, s => `${s.label}<small>${s.tiles}</small>`);
@@ -448,8 +456,7 @@ function render() {
             <img class="badge" src="tribes/${r.t.id}.png" alt="" width="46" height="46">
             <div class="body">
               ${top ? `<div class="stars" aria-hidden="true">★★★</div>` : ""}
-              <div class="name">${r.t.name}</div>
-              <div class="note">${r.t.note}</div>
+              <div><span class="name">${r.t.name}</span><span class="note">${r.t.note}</span></div>
               ${why}
               ${caution}
             </div>
