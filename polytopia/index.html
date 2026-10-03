@@ -1,0 +1,391 @@
+<title>Polytopia Tribe Picker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow column — settings card on top, ranked tier list below, like a game lobby screen */
+:root {
+  --bg: #e7eff2;
+  --panel: #ffffff;
+  --fg: #16252e;
+  --muted: #5a6d78;
+  --line: #c9d7de;
+  --accent: #1f8a8a;
+  --accent-ink: #ffffff;
+  --chip: #f1f6f8;
+  --tier-s: #f0b429;
+  --tier-a: #4caf6a;
+  --tier-b: #4a8fd4;
+  --tier-c: #9aa8b1;
+  --tier-ink: #16252e;
+  --font-display: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1c24; --panel: #172a35; --fg: #e6f0f3; --muted: #93a8b3; --line: #2a4250;
+    --accent: #3fc1b8; --accent-ink: #0b1a20; --chip: #1d3441;
+    --tier-s: #f5c04a; --tier-a: #5cc47c; --tier-b: #64a6e8; --tier-c: #6f818c; --tier-ink: #0b1a20;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1c24; --panel: #172a35; --fg: #e6f0f3; --muted: #93a8b3; --line: #2a4250;
+  --accent: #3fc1b8; --accent-ink: #0b1a20; --chip: #1d3441;
+  --tier-s: #f5c04a; --tier-a: #5cc47c; --tier-b: #64a6e8; --tier-c: #6f818c; --tier-ink: #0b1a20;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+}
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+header h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.1rem;
+  line-height: 1.05;
+  margin: 0;
+  text-wrap: balance;
+  letter-spacing: 0.01em;
+}
+header p { margin: 6px 0 0; color: var(--muted); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+  padding: 0;
+}
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--chip);
+  border: 1px solid var(--line);
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.seg label small { font-weight: 500; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+.seg input:checked + label { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.seg input:checked + label small { color: var(--accent-ink); opacity: .8; }
+.seg input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+details.owned summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+details.owned .seg { margin-top: 10px; }
+.owned-actions { display: flex; gap: 12px; margin-top: 10px; }
+.linkbtn {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--accent); font: inherit; font-weight: 600; font-size: 0.9rem;
+}
+
+/* Results */
+.results { display: flex; flex-direction: column; gap: 14px; }
+.tier { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+.tier-badge {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--tier-ink);
+  height: 44px;
+  display: grid;
+  place-items: center;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+.tier[data-t="S"] .tier-badge { background: var(--tier-s); }
+.tier[data-t="A"] .tier-badge { background: var(--tier-a); }
+.tier[data-t="B"] .tier-badge { background: var(--tier-b); }
+.tier[data-t="C"] .tier-badge { background: var(--tier-c); }
+.tier-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.tribe {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.tribe .rank { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.85rem; font-weight: 600; }
+.tribe .name { font-weight: 700; }
+.tribe .note { color: var(--muted); font-size: 0.88rem; }
+.tribe .body { min-width: 0; }
+.gem {
+  width: 26px; height: 26px;
+  clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.35) 0 42%, transparent 42% 100%),
+    linear-gradient(225deg, rgba(0,0,0,.22) 0 40%, transparent 40% 100%),
+    var(--c);
+}
+.tier[data-t="S"] .tribe { border-color: var(--tier-s); border-width: 2px; padding: 12px 14px; }
+.tier[data-t="S"] .tribe .name { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; letter-spacing: .01em; }
+.why { margin: 4px 0 0; padding-left: 18px; font-size: 0.88rem; }
+.why li { margin: 2px 0; }
+.tag {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px;
+  white-space: nowrap;
+}
+.empty { color: var(--muted); }
+footer { color: var(--muted); font-size: 0.82rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Polytopia Tribe Picker</h1>
+    <p>Set up your game and get a ranked list of tribes, best pick at the top.</p>
+  </header>
+
+  <form class="panel" id="setup" onsubmit="return false">
+    <fieldset>
+      <legend>Opponents</legend>
+      <div class="seg" id="opp"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Map type</legend>
+      <div class="seg" id="type"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Map size</legend>
+      <div class="seg" id="size"></div>
+    </fieldset>
+    <details class="owned" id="owned-box">
+      <summary id="owned-summary">Tribes I own: all 16</summary>
+      <div class="seg" id="owned"></div>
+      <div class="owned-actions">
+        <button type="button" class="linkbtn" id="own-all">Select all</button>
+        <button type="button" class="linkbtn" id="own-free">Free tribes only</button>
+      </div>
+    </details>
+  </form>
+
+  <section class="results" id="results" aria-live="polite"></section>
+
+  <footer>
+    Rankings are a rule of thumb built from common community advice, not official game data.
+    They lean toward Domination games against bots or friends. Have fun and break the rules.
+  </footer>
+</div>
+
+<script>
+// ---------- Game data ----------
+const OPPONENTS = [
+  { id: 1, label: "1" }, { id: 2, label: "2" }, { id: 4, label: "4" }, { id: 9, label: "9" },
+];
+// w = how much water-strength matters, l = how much land-strength matters
+const MAP_TYPES = [
+  { id: "drylands",    label: "Drylands",    w: -0.4, l: 1.2 },
+  { id: "lakes",       label: "Lakes",       w: 0.5,  l: 0.7 },
+  { id: "pangea",      label: "Pangea",      w: 0.1,  l: 1.0 },
+  { id: "continents",  label: "Continents",  w: 0.9,  l: 0.5 },
+  { id: "archipelago", label: "Archipelago", w: 1.4,  l: 0 },
+  { id: "waterworld",  label: "Water World", w: 1.9,  l: -0.3 },
+];
+// e = how much a fast start matters, g = how much long-game growth matters
+const SIZES = [
+  { id: "tiny",    label: "Tiny",    tiles: 121, e: 1.2,  g: -0.4 },
+  { id: "small",   label: "Small",   tiles: 196, e: 0.8,  g: 0 },
+  { id: "normal",  label: "Normal",  tiles: 256, e: 0.4,  g: 0.4 },
+  { id: "large",   label: "Large",   tiles: 324, e: 0,    g: 0.8 },
+  { id: "huge",    label: "Huge",    tiles: 400, e: -0.2, g: 1.1 },
+  { id: "massive", label: "Massive", tiles: 900, e: -0.4, g: 1.4 },
+];
+const OPP_WEIGHTS = { 1: { e: 0.7, g: -0.2 }, 2: { e: 0.3, g: 0.1 }, 4: { e: 0, g: 0.4 }, 9: { e: -0.3, g: 0.8 } };
+
+// base = all-round strength; water/land/early/late = how the tribe likes each condition (-2..3)
+const TRIBES = [
+  { id: "bardur",   name: "Bardur",   c: "#5a4636", free: true,  base: 3, water: 0,  land: 2,  early: 2,  late: 1, note: "Hunting start and a sturdy economy. Hard to go wrong with." },
+  { id: "imperius", name: "Imperius", c: "#2f57d6", free: true,  base: 3, water: 0,  land: 1,  early: 1,  late: 2, note: "Smooth, flexible economy that grows into anything." },
+  { id: "oumaji",   name: "Oumaji",   c: "#e8c72c", free: true,  base: 2, water: -2, land: 3,  early: 3,  late: -1, note: "Riders from turn one. Brutal on small open maps." },
+  { id: "xinxi",    name: "Xin-xi",   c: "#cc2a2a", free: true,  base: 2, water: -1, land: 2,  early: 2,  late: 0, note: "Mountain start with strong defence and quick early pushes." },
+  { id: "aimo",     name: "Ai-Mo",    c: "#2fbf9a", free: false, base: 3, water: 0,  land: 1,  early: 0,  late: 3, note: "Calm, high-scoring economy that snowballs with space." },
+  { id: "kickoo",   name: "Kickoo",   c: "#36c24a", free: false, base: 3, water: 3,  land: -1, early: 1,  late: 1, note: "Fishing start and rich coasts. King of watery maps." },
+  { id: "cymanti",  name: "Cymanti",  c: "#9bd13a", free: false, base: 3, water: 2,  land: 0,  early: 1,  late: 2, note: "Special tribe. Bugs, poison and algae; strong on lakes and seas." },
+  { id: "elyrion",  name: "Elyrion",  c: "#d9318c", free: false, base: 2, water: 0,  land: 1,  early: -1, late: 3, note: "Special tribe. Enchanted forests and dragons late on." },
+  { id: "aquarion", name: "Aquarion", c: "#e88a8a", free: false, base: 2, water: 3,  land: -1, early: 0,  late: 1, note: "Special tribe. Amphibious units built for water maps." },
+  { id: "polaris",  name: "Polaris",  c: "#9fd8ef", free: false, base: 1, water: 2,  land: 0,  early: -1, late: 2, note: "Special tribe. Freezes land and sea into ice it controls." },
+  { id: "luxidoor", name: "Luxidoor", c: "#9b46c9", free: false, base: 1, water: 0,  land: 1,  early: -2, late: 3, note: "Rich, big capital. Slow start, strong long game." },
+  { id: "yadakk",   name: "Yadakk",   c: "#8a3428", free: false, base: 1, water: -1, land: 2,  early: 0,  late: 2, note: "Roads and trade. Shines once your cities are connected." },
+  { id: "vengir",   name: "Vengir",   c: "#b8c0c4", free: false, base: 1, water: -1, land: 2,  early: 2,  late: -1, note: "Gets swordsmen out early. Good for a fast land fight." },
+  { id: "hoodrick", name: "Hoodrick", c: "#a2762b", free: false, base: 1, water: -1, land: 1,  early: 1,  late: 1, note: "Archers and forests. Solid, defensive play." },
+  { id: "quetzali", name: "Quetzali", c: "#2aa3b8", free: false, base: 1, water: -1, land: 1,  early: 1,  late: 1, note: "Defenders and fruit-heavy land. Tough to break." },
+  { id: "zebasi",   name: "Zebasi",   c: "#e07a1f", free: false, base: 1, water: -1, land: 2,  early: -1, late: 1, note: "Farming economy. Happiest on open, dry land." },
+];
+
+// ---------- State ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("polypick:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("polypick:" + k, JSON.stringify(v)); } catch {} },
+};
+const state = {
+  opp: store.get("opp", 2),
+  type: store.get("type", "continents"),
+  size: store.get("size", "normal"),
+  owned: new Set(store.get("owned", TRIBES.map(t => t.id))),
+};
+
+// ---------- Scoring ----------
+function scoreTribe(t) {
+  const mt = MAP_TYPES.find(m => m.id === state.type);
+  const sz = SIZES.find(s => s.id === state.size);
+  const op = OPP_WEIGHTS[state.opp];
+  const parts = {
+    water: t.water * mt.w,
+    land:  t.land * mt.l,
+    early: t.early * (sz.e + op.e),
+    late:  t.late * (sz.g + op.g),
+  };
+  const total = t.base + parts.water + parts.land + parts.early + parts.late;
+  return { t, total, parts };
+}
+
+function reasons(r) {
+  const mt = MAP_TYPES.find(m => m.id === state.type);
+  const sz = SIZES.find(s => s.id === state.size);
+  const out = [];
+  const sorted = Object.entries(r.parts).filter(([, v]) => v >= 0.5).sort((a, b) => b[1] - a[1]);
+  for (const [k] of sorted.slice(0, 2)) {
+    if (k === "water") out.push(`${mt.label} has lots of water, and this tribe is at home on it.`);
+    if (k === "land")  out.push(`${mt.label} is land-heavy, which suits how this tribe expands and fights.`);
+    if (k === "early") out.push(state.opp === 1
+      ? `A one-on-one on a ${sz.label.toLowerCase()} map rewards a fast start.`
+      : `A ${sz.label.toLowerCase()} map means early fights, and this tribe starts quickly.`);
+    if (k === "late")  out.push(state.opp >= 4
+      ? `${state.opp} opponents means a long game, and this tribe grows strong over time.`
+      : `A ${sz.label.toLowerCase()} map gives room to build, which this tribe uses well.`);
+  }
+  if (!out.length) out.push("A strong all-rounder that fits this setup.");
+  return out;
+}
+
+// ---------- Rendering ----------
+const $ = id => document.getElementById(id);
+
+function segButtons(container, name, items, current, labelFn) {
+  container.innerHTML = items.map(it => {
+    const id = `${name}-${it.id}`;
+    return `<input type="radio" name="${name}" id="${id}" value="${it.id}" ${String(it.id) === String(current) ? "checked" : ""}>` +
+           `<label for="${id}">${labelFn(it)}</label>`;
+  }).join("");
+}
+
+function renderControls() {
+  segButtons($("opp"), "opp", OPPONENTS, state.opp, o => o.label);
+  segButtons($("type"), "type", MAP_TYPES, state.type, m => m.label);
+  segButtons($("size"), "size", SIZES, state.size, s => `${s.label}<small>${s.tiles}</small>`);
+  renderOwned();
+}
+
+function renderOwned() {
+  $("owned").innerHTML = TRIBES.map(t =>
+    `<input type="checkbox" id="own-${t.id}" value="${t.id}" ${state.owned.has(t.id) ? "checked" : ""}>` +
+    `<label for="own-${t.id}">${t.name}</label>`
+  ).join("");
+  const n = state.owned.size;
+  $("owned-summary").textContent = n === TRIBES.length ? "Tribes I own: all 16" : `Tribes I own: ${n} of 16`;
+}
+
+function renderResults() {
+  const ranked = TRIBES.filter(t => state.owned.has(t.id)).map(scoreTribe).sort((a, b) => b.total - a.total);
+  if (!ranked.length) {
+    $("results").innerHTML = `<p class="empty">Pick at least one tribe you own to see a ranking.</p>`;
+    return;
+  }
+  // S tier: always the top pick, plus the runner-up only if it's genuinely close. Never more than two.
+  const sCount = ranked.length > 1 && ranked[0].total - ranked[1].total <= 0.6 ? 2 : 1;
+  const rest = ranked.slice(sCount);
+  const tiers = [
+    ["S", ranked.slice(0, sCount)],
+    ["A", rest.slice(0, 4)],
+    ["B", rest.slice(4, 9)],
+    ["C", rest.slice(9)],
+  ].filter(([, list]) => list.length);
+
+  let rank = 0;
+  $("results").innerHTML = tiers.map(([tier, list]) => `
+    <div class="tier" data-t="${tier}">
+      <div class="tier-badge" aria-label="${tier} tier">${tier}</div>
+      <div class="tier-list">
+        ${list.map(r => {
+          rank++;
+          const why = tier === "S" ? `<ul class="why">${reasons(r).map(x => `<li>${x}</li>`).join("")}</ul>` : "";
+          return `<div class="tribe">
+            <div class="gem" style="--c:${r.t.c}" aria-hidden="true"></div>
+            <div class="body">
+              <div class="name">${r.t.name}</div>
+              <div class="note">${r.t.note}</div>
+              ${why}
+            </div>
+            <div class="rank">#${rank}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+}
+
+$("setup").addEventListener("change", e => {
+  const el = e.target;
+  if (el.name === "opp") state.opp = Number(el.value);
+  else if (el.name === "type") state.type = el.value;
+  else if (el.name === "size") state.size = el.value;
+  else if (el.id.startsWith("own-")) {
+    el.checked ? state.owned.add(el.value) : state.owned.delete(el.value);
+    renderOwned();
+  }
+  store.set("opp", state.opp); store.set("type", state.type); store.set("size", state.size);
+  store.set("owned", [...state.owned]);
+  renderResults();
+});
+$("own-all").addEventListener("click", () => {
+  state.owned = new Set(TRIBES.map(t => t.id));
+  store.set("owned", [...state.owned]); renderOwned(); renderResults();
+});
+$("own-free").addEventListener("click", () => {
+  state.owned = new Set(TRIBES.filter(t => t.free).map(t => t.id));
+  store.set("owned", [...state.owned]); renderOwned(); renderResults();
+});
+
+renderControls();
+renderResults();
+</script>
