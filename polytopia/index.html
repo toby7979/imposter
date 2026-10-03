@@ -143,8 +143,16 @@ details.owned .seg { margin-top: 10px; }
 .tribe .name { font-size: 1.05rem; font-weight: 800; }
 .tribe .note { color: var(--muted); font-size: .88rem; font-weight: 600; }
 .tribe .body { min-width: 0; }
-.head { width: 44px; height: 48px; display: block; }
-.tier[data-t="S"] .head { width: 58px; height: 64px; }
+.badge {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: grid; place-items: center; overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.18) 0 50%, rgba(0,0,0,.08) 50%),
+    var(--c);
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.85), 0 3px 0 var(--edge);
+}
+.head { width: 80%; height: 80%; display: block; margin-top: 8%; }
+.tier[data-t="S"] .badge { width: 68px; height: 68px; }
 .tier[data-t="S"] .tribe { box-shadow: 0 4px 0 var(--edge), inset 0 0 0 3px var(--tier-s); padding: 14px; }
 .tier[data-t="S"] .tribe .name { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
 .stars { color: var(--gold); letter-spacing: 2px; font-size: .9rem; }
@@ -532,7 +540,7 @@ function render() {
           const top = tier === "S";
           const why = top ? `<ul class="why">${reasons(r).map(x => `<li>${x}</li>`).join("")}</ul>` : "";
           return `<div class="tribe">
-            ${headSVG(r.t)}
+            <div class="badge" style="--c:${shade(r.t.c, -0.45)}">${headSVG(r.t)}</div>
             <div class="body">
               ${top ? `<div class="stars" aria-hidden="true">★★★</div>` : ""}
               <div class="name">${r.t.name}</div>
