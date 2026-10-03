@@ -2,33 +2,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800&display=swap">
 <style>
-/* Layout: one narrow terminal column, like an old roguelike's menu screens: boxed panels, glyph map, ruled tier lists.
-   Single dark theme on purpose (a CRT look), with colours from a classic 16-colour roguelike palette. */
+/* Layout: game-lobby column — a low-poly preview island on top, chunky navy menu panel, then the ranked tier list.
+   Deliberately single-theme (dark navy, like the game's menus) so it looks the same on any device. */
 :root {
-  --bg: #0c1716;
-  --panel: #10201f;
-  --line: #155352;
-  --fg: #b1c9c3;
-  --dim: #6f8f8a;
-  --bright: #ffffff;
-  --cyan: #77bfcf;
-  --gold: #cfc041;
-  --red: #d74200;
-  --green: #00c420;
-  --t1: #cfc041; --t2: #00c420; --t3: #77bfcf; --t4: #da5bd6; --t5: #f15f22; --t6: #b1c9c3; --t7: #6f8f8a;
-  --font: "VT323", "Courier New", ui-monospace, monospace;
+  --bg: #15203a;
+  --sea: #1b2c50;
+  --panel: #22325a;
+  --panel-2: #2e4274;
+  --edge: #121b33;
+  --fg: #ffffff;
+  --muted: #a8b8dc;
+  --accent: #3ec6f0;
+  --accent-edge: #1f8db8;
+  --gold: #ffc93c;
+  --tier-1: #ffc93c;
+  --tier-2: #6ad26a;
+  --tier-3: #4fa8ee;
+  --tier-4: #b07ff0;
+  --tier-5: #f08a6a;
+  --tier-6: #8b97b3;
+  --tier-7: #67718a;
+  --tier-ink: #15203a;
+  --font-display: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: dark;
 }
+
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(120% 60% at 50% 0%, var(--sea) 0%, var(--bg) 70%) no-repeat,
+    var(--bg);
   color: var(--fg);
-  font-family: var(--font);
-  font-size: 19px;
-  line-height: 1.15;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.35;
+  min-height: 100%;
 }
 .wrap {
   max-width: 560px;
@@ -39,94 +52,180 @@ body {
   flex-direction: column;
   gap: 12px;
 }
-h1, h2 { font-weight: 400; margin: 0; }
-button { font: inherit; }
-
-/* Work-in-progress banner */
-.wip { border: 1px solid var(--gold); background: var(--panel); text-align: center; }
-.wip-stripes { height: 6px; background: repeating-linear-gradient(-45deg, var(--gold) 0 6px, var(--bg) 6px 12px); }
-.wip-body { padding: 8px 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.wip h2 { color: var(--gold); font-size: 1.5rem; letter-spacing: .08em; }
-.wip p { margin: 0; max-width: 40ch; }
-.wip-btn {
-  cursor: pointer; background: none; color: var(--gold); text-decoration: none;
-  border: 1px solid var(--gold); padding: 2px 10px;
-}
-.wip-btn:hover, .wip-btn:focus-visible { background: var(--gold); color: var(--bg); outline: none; }
-.wip-note { color: var(--dim); font-size: .85rem; }
+.display { font-family: var(--font-display); font-weight: 400; text-shadow: 0 3px 0 rgba(0,0,0,.35); letter-spacing: .01em; }
 
 header { text-align: center; }
-header h1 { font-size: 2.1rem; color: var(--cyan); letter-spacing: .1em; text-transform: uppercase; }
-header p { margin: 2px 0 0; color: var(--dim); }
+header h1 { font-size: 1.7rem; line-height: 1; margin: 0; text-wrap: balance; }
+header p { margin: 2px 0 0; font-size: .9rem; color: var(--muted); font-weight: 600; }
 
-/* Glyph map */
-.island { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-#map {
-  margin: 0; padding: 6px 8px;
-  border: 1px solid var(--line);
-  background: #000;
-  font-family: var(--font); font-size: 15px; line-height: 1;
-  overflow-x: auto; max-width: 100%;
+/* Work-in-progress banner */
+.wip {
+  background: var(--gold);
+  color: var(--tier-ink);
+  border-radius: 16px;
+  box-shadow: 0 5px 0 #b8860b;
+  overflow: hidden;
+  text-align: center;
 }
-.island .caption { color: var(--dim); font-size: .9rem; }
+.wip-stripes {
+  height: 8px;
+  background: repeating-linear-gradient(-45deg, var(--tier-ink) 0 8px, var(--gold) 8px 16px);
+}
+.wip-body { padding: 8px 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.wip h2 { margin: 0; font-size: 1.35rem; line-height: 1; text-shadow: none; text-wrap: balance; }
+.wip p { margin: 0; font-weight: 700; max-width: 40ch; font-size: .85rem; }
+.wip-btn {
+  font: inherit; font-weight: 800; font-size: 1rem;
+  cursor: pointer; border: 0;
+  padding: 6px 14px; border-radius: 10px; font-size: .9rem;
+  background: var(--tier-ink); color: #fff; text-decoration: none;
+  box-shadow: 0 3px 0 #000;
+}
+.wip-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+.wip-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.wip-note { font-size: .8rem; opacity: .75; }
 
-/* Settings panel */
+/* Preview island */
+.island { position: relative; width: 100%; max-width: 380px; margin: 0 auto; }
+.island canvas { display: block; width: 100%; height: auto; }
+.island .caption {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 .panel {
-  border: 1px solid var(--line);
   background: var(--panel);
-  padding: 8px 10px 10px;
-  display: flex; flex-direction: column; gap: 8px;
+  border-radius: 16px;
+  box-shadow: 0 5px 0 var(--edge);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-legend { color: var(--cyan); padding: 0; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .06em; font-size: .95rem; }
-.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+legend {
+  font-family: var(--font-display);
+  font-size: .95rem;
+  letter-spacing: .03em;
+  margin-bottom: 5px;
+  padding: 0;
+}
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
 .seg label {
-  cursor: pointer; user-select: none;
-  border: 1px solid var(--line);
-  padding: 1px 7px;
-  color: var(--fg);
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  box-shadow: 0 3px 0 var(--edge);
+  font-weight: 800;
+  font-size: .85rem;
+  user-select: none;
+  transition: transform .08s, box-shadow .08s, background .12s;
 }
-.seg label small { color: var(--dim); margin-left: 4px; font-size: .85em; font-variant-numeric: tabular-nums; }
-.seg label:hover { border-color: var(--cyan); }
-.seg input:checked + label { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
-.seg input:checked + label small { color: var(--bg); }
-.seg input:focus-visible + label { outline: 1px solid var(--gold); outline-offset: 1px; }
-details.owned summary { cursor: pointer; color: var(--dim); }
-details.owned .seg { margin-top: 6px; }
-.owned-actions { display: flex; gap: 12px; margin-top: 6px; }
-.linkbtn { background: none; border: 0; padding: 0; cursor: pointer; color: var(--cyan); text-decoration: underline; }
+.seg label small { font-weight: 700; color: var(--muted); margin-left: 5px; font-variant-numeric: tabular-nums; }
+.seg label:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge); }
+.seg input:checked + label { background: var(--accent); color: var(--tier-ink); box-shadow: 0 3px 0 var(--accent-edge); }
+.seg input:checked + label small { color: var(--tier-ink); opacity: .7; }
+.seg input:focus-visible + label { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+details.owned summary { cursor: pointer; color: var(--muted); font-size: .95rem; }
+details.owned .seg { margin-top: 10px; }
+.owned-actions { display: flex; gap: 14px; margin-top: 12px; }
+.linkbtn { background: none; border: 0; padding: 0; cursor: pointer; color: var(--accent); font: inherit; font-size: .9rem; }
 
 /* Results */
-.results { display: flex; flex-direction: column; gap: 8px; }
-.tier-head { display: flex; align-items: center; gap: 8px; color: var(--t); letter-spacing: .08em; }
-.tier-head::after { content: ""; flex: 1; border-top: 1px solid var(--t); opacity: .5; }
-.tier[data-t="1"] { --t: var(--t1); } .tier[data-t="2"] { --t: var(--t2); } .tier[data-t="3"] { --t: var(--t3); }
-.tier[data-t="4"] { --t: var(--t4); } .tier[data-t="5"] { --t: var(--t5); } .tier[data-t="6"] { --t: var(--t6); }
-.tier[data-t="7"] { --t: var(--t7); }
-.tier-list { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; }
-.tribe { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: start; padding: 2px 4px; }
-.tribe .body { min-width: 0; }
-.glyph {
-  width: 1.3em; height: 1.3em; display: grid; place-items: center;
-  background: #000; border: 1px solid currentColor; line-height: 1;
+.results { display: flex; flex-direction: column; gap: 10px; }
+.tier { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+.tier-badge {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--tier-ink);
+  height: 38px;
+  display: grid;
+  place-items: center;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background:
+    linear-gradient(120deg, rgba(255,255,255,.35) 0 48%, transparent 48%),
+    linear-gradient(240deg, rgba(0,0,0,.18) 0 46%, transparent 46%),
+    var(--t);
 }
-.tribe .name { color: var(--bright); }
-.tribe .note { color: var(--dim); font-size: .9rem; }
-.tribe .rank { color: var(--dim); font-size: .9rem; font-variant-numeric: tabular-nums; }
-.tribe.top { border: 3px double var(--gold); padding: 4px 6px; background: var(--panel); }
-.tribe.top .name { color: var(--gold); }
-.stars { color: var(--gold); margin-left: 6px; }
-.why { margin: 2px 0 0; padding: 0; list-style: none; font-size: .9rem; }
-.why li::before { content: "» "; color: var(--cyan); }
-.warn, .tip { margin-top: 3px; font-size: .9rem; }
-.warn { color: var(--gold); }
-.warn::before { content: "(!) "; color: var(--red); }
-.tip { color: var(--green); }
-.tip::before { content: "(+) "; }
-.empty, .source { margin: 0; color: var(--dim); font-size: .9rem; text-align: center; }
-footer { color: var(--dim); font-size: .85rem; text-align: center; border-top: 1px solid var(--line); padding-top: 8px; }
-footer a { color: var(--cyan); }
+.tier[data-t="1"] { --t: var(--tier-1); }
+.tier[data-t="2"] { --t: var(--tier-2); }
+.tier[data-t="3"] { --t: var(--tier-3); }
+.tier[data-t="4"] { --t: var(--tier-4); }
+.tier[data-t="5"] { --t: var(--tier-5); }
+.tier[data-t="6"] { --t: var(--tier-6); }
+.tier[data-t="7"] { --t: var(--tier-7); }
+.tier-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.tribe {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--panel);
+  border-radius: 10px;
+  box-shadow: 0 3px 0 var(--edge);
+  padding: 6px 10px;
+}
+.tribe .rank { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .85rem; }
+.tribe .name { font-size: .95rem; font-weight: 800; }
+.tribe .note { color: var(--muted); font-size: .8rem; font-weight: 600; }
+.tribe .body { min-width: 0; }
+.badge {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.18) 0 50%, rgba(0,0,0,.08) 50%),
+    var(--c);
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.85), 0 3px 0 var(--edge);
+}
+.head { width: 80%; height: 80%; display: block; margin-top: 8%; }
+.tribe.top .badge { width: 50px; height: 50px; }
+.tribe.top { box-shadow: 0 4px 0 var(--edge), inset 0 0 0 2px var(--tier-1); padding: 10px; }
+.tribe.top .name { font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.stars { color: var(--gold); letter-spacing: 2px; font-size: .9rem; }
+.why { margin: 4px 0 0; padding-left: 16px; font-size: .8rem; font-weight: 600; }
+.why li { margin: 2px 0; }
+.warn {
+  margin-top: 5px;
+  padding: 6px 10px 6px 30px;
+  border-radius: 8px;
+  background: rgba(255, 201, 60, .14);
+  color: var(--gold);
+  font-size: .8rem;
+  position: relative;
+}
+.tip {
+  margin-top: 5px;
+  padding: 6px 10px 6px 30px;
+  border-radius: 8px;
+  background: rgba(106, 210, 106, .14);
+  color: var(--tier-2);
+  font-size: .8rem;
+  position: relative;
+}
+.tip::before {
+  content: "\2605";
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--tier-2); color: var(--tier-ink);
+  font-size: .65rem; text-align: center; line-height: 16px;
+}
+.warn::before {
+  content: "!";
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--gold); color: var(--tier-ink);
+  font-size: .75rem; font-weight: 800; text-align: center; line-height: 16px;
+}
+.empty { color: var(--muted); }
+.source { margin: 0; color: var(--muted); font-size: .85rem; font-weight: 600; text-align: center; }
+footer { color: var(--muted); font-size: .8rem; font-weight: 600; text-align: center; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -134,21 +233,21 @@ footer a { color: var(--cyan); }
   <section class="wip" id="wip" aria-labelledby="wip-title">
     <div class="wip-stripes" aria-hidden="true"></div>
     <div class="wip-body">
-      <h2 id="wip-title">[!] Work in progress</h2>
+      <h2 class="display" id="wip-title">Work in progress!</h2>
       <p>Tiers and tips are still being tuned. Think a tribe is in the wrong place? Tell us.</p>
-      <a class="wip-btn" id="suggest" href="https://forms.gle/5PyaQowQpJ5NSRXq9" target="_blank" rel="noopener">[ Submit a suggestion ]</a>
+      <a class="wip-btn" id="suggest" href="https://forms.gle/5PyaQowQpJ5NSRXq9" target="_blank" rel="noopener">Submit a suggestion</a>
       <p class="wip-note">Opens a short Google Form. No sign-in needed.</p>
     </div>
     <div class="wip-stripes" aria-hidden="true"></div>
   </section>
 
   <header>
-    <h1>Tribe Picker</h1>
+    <h1 class="display">Tribe Picker</h1>
     <p>Set up your game. Best tribe for it comes out on top.</p>
   </header>
 
   <div class="island">
-    <pre id="map" role="img" aria-label="Text map preview of the chosen map type and size"></pre>
+    <canvas id="map" aria-label="Low-poly preview of the chosen map type, in the top tribe's colours" role="img"></canvas>
     <div class="caption" id="map-caption"></div>
   </div>
 
@@ -184,7 +283,7 @@ footer a { color: var(--cyan); }
   <footer>
     Unofficial fan-made tool, not made or approved by Midjiwan or The Battle of Polytopia.
     All artwork here is original. For the real game, visit
-    <a href="https://polytopia.io/">polytopia.io</a>.
+    <a href="https://polytopia.io/" style="color: var(--accent)">polytopia.io</a>.
     Tier lists come from a player league and player notes, not official game data.
   </footer>
 </div>
@@ -222,22 +321,22 @@ const OPP_WEIGHTS = { 1: { e: 0.7, g: -0.2 }, 2: { e: 0.3, g: 0.1 }, 4: { e: 0, 
 // base = all-round strength; water/land/early/late = how the tribe likes each condition (-2..3)
 // ground/tree = colours used to paint the preview island when this tribe is the top pick
 const TRIBES = [
-  { id: "bardur",   name: "Bardur",   g: "B", c: "#98875f", free: true,  base: 3, water: 0,  land: 2,  early: 2,  late: 1, note: "Hunting start and a sturdy economy. Hard to go wrong with." },
-  { id: "imperius", name: "Imperius", g: "I", c: "#0096ff", free: true,  base: 3, water: 0,  land: 1,  early: 1,  late: 2, note: "Smooth, flexible economy that grows into anything." },
-  { id: "oumaji",   name: "Oumaji",   g: "O", c: "#cfc041", free: true,  base: 2, water: -2, land: 3,  early: 3,  late: -1, note: "Riders from turn one. Brutal on small open maps." },
-  { id: "xinxi",    name: "Xin-xi",   g: "X", c: "#d74200", free: true,  base: 2, water: -1, land: 2,  early: 2,  late: 0, note: "Mountain start with strong defence and quick early pushes." },
-  { id: "aimo",     name: "Ai-Mo",    g: "a", c: "#77bfcf", free: false, base: 3, water: 0,  land: 1,  early: 0,  late: 3, note: "Calm, high-scoring economy that snowballs with space." },
-  { id: "kickoo",   name: "Kickoo",   g: "K", c: "#00c420", free: false, base: 3, water: 3,  land: -1, early: 1,  late: 1, note: "Fishing start and rich coasts. King of watery maps." },
-  { id: "cymanti",  name: "Cymanti",  g: "C", c: "#8fd400", free: false, base: 3, water: 2,  land: 0,  early: 1,  late: 2, note: "Special tribe. Bugs, poison and algae; strong on lakes and seas." },
-  { id: "elyrion",  name: "Elyrion",  g: "E", c: "#da5bd6", free: false, base: 2, water: 0,  land: 1,  early: -1, late: 3, note: "Special tribe. Enchanted forests and dragons late on." },
-  { id: "aquarion", name: "Aquarion", g: "A", c: "#e07fa0", free: false, base: 2, water: 3,  land: -1, early: 0,  late: 1, note: "Special tribe. Amphibious units built for water maps." },
-  { id: "polaris",  name: "Polaris",  g: "P", c: "#ffffff", free: false, base: 1, water: 2,  land: 0,  early: -1, late: 2, note: "Special tribe. Freezes land and sea into ice it controls." },
-  { id: "luxidoor", name: "Luxidoor", g: "L", c: "#b154cf", free: false, base: 1, water: 0,  land: 1,  early: -2, late: 3, note: "Rich, big capital. Slow start, strong long game." },
-  { id: "yadakk",   name: "Yadakk",   g: "Y", c: "#a64a2e", free: false, base: 1, water: -1, land: 2,  early: 0,  late: 2, note: "Roads and trade. Shines once your cities are connected." },
-  { id: "vengir",   name: "Vengir",   g: "V", c: "#b1c9c3", free: false, base: 1, water: -1, land: 2,  early: 2,  late: -1, note: "Gets swordsmen out early. Good for a fast land fight." },
-  { id: "hoodrick", name: "Hoodrick", g: "H", c: "#e99f10", free: false, base: 1, water: -1, land: 1,  early: 1,  late: 1, note: "Archers and forests. Solid, defensive play." },
-  { id: "quetzali", name: "Quetzali", g: "Q", c: "#40a4b9", free: false, base: 1, water: -1, land: 1,  early: 1,  late: 1, note: "Defenders and fruit-heavy land. Tough to break." },
-  { id: "zebasi",   name: "Zebasi",   g: "Z", c: "#f15f22", free: false, base: 1, water: -1, land: 2,  early: -1, late: 1, note: "Farming economy. Happiest on open, dry land." },
+  { id: "bardur",   name: "Bardur",   c: "#5a4636", ground: "#9fae8c", tree: "#3f6b4a", free: true,  base: 3, water: 0,  land: 2,  early: 2,  late: 1, note: "Hunting start and a sturdy economy. Hard to go wrong with." },
+  { id: "imperius", name: "Imperius", c: "#2f57d6", ground: "#8cc95a", tree: "#3e8a3a", free: true,  base: 3, water: 0,  land: 1,  early: 1,  late: 2, note: "Smooth, flexible economy that grows into anything." },
+  { id: "oumaji",   name: "Oumaji",   c: "#e8c72c", ground: "#e6cf7c", tree: "#8ea040", free: true,  base: 2, water: -2, land: 3,  early: 3,  late: -1, note: "Riders from turn one. Brutal on small open maps." },
+  { id: "xinxi",    name: "Xin-xi",   c: "#cc2a2a", ground: "#74ad55", tree: "#2f6e3a", free: true,  base: 2, water: -1, land: 2,  early: 2,  late: 0, note: "Mountain start with strong defence and quick early pushes." },
+  { id: "aimo",     name: "Ai-Mo",    c: "#2fbf9a", ground: "#c4d6ae", tree: "#5f8f6a", free: false, base: 3, water: 0,  land: 1,  early: 0,  late: 3, note: "Calm, high-scoring economy that snowballs with space." },
+  { id: "kickoo",   name: "Kickoo",   c: "#36c24a", ground: "#74d867", tree: "#2e9a4a", free: false, base: 3, water: 3,  land: -1, early: 1,  late: 1, note: "Fishing start and rich coasts. King of watery maps." },
+  { id: "cymanti",  name: "Cymanti",  c: "#9bd13a", ground: "#c9d46c", tree: "#c0569a", free: false, base: 3, water: 2,  land: 0,  early: 1,  late: 2, note: "Special tribe. Bugs, poison and algae; strong on lakes and seas." },
+  { id: "elyrion",  name: "Elyrion",  c: "#d9318c", ground: "#9ee08c", tree: "#d45aa8", free: false, base: 2, water: 0,  land: 1,  early: -1, late: 3, note: "Special tribe. Enchanted forests and dragons late on." },
+  { id: "aquarion", name: "Aquarion", c: "#e88a8a", ground: "#9fd4b4", tree: "#3f9a8a", free: false, base: 2, water: 3,  land: -1, early: 0,  late: 1, note: "Special tribe. Amphibious units built for water maps." },
+  { id: "polaris",  name: "Polaris",  c: "#9fd8ef", ground: "#eaf5fa", tree: "#8fb8cc", free: false, base: 1, water: 2,  land: 0,  early: -1, late: 2, note: "Special tribe. Freezes land and sea into ice it controls." },
+  { id: "luxidoor", name: "Luxidoor", c: "#9b46c9", ground: "#b896d4", tree: "#6a4a9a", free: false, base: 1, water: 0,  land: 1,  early: -2, late: 3, note: "Rich, big capital. Slow start, strong long game." },
+  { id: "yadakk",   name: "Yadakk",   c: "#8a3428", ground: "#d2b47a", tree: "#7a8a3a", free: false, base: 1, water: -1, land: 2,  early: 0,  late: 2, note: "Roads and trade. Shines once your cities are connected." },
+  { id: "vengir",   name: "Vengir",   c: "#b8c0c4", ground: "#8f9478", tree: "#4a5a3a", free: false, base: 1, water: -1, land: 2,  early: 2,  late: -1, note: "Gets swordsmen out early. Good for a fast land fight." },
+  { id: "hoodrick", name: "Hoodrick", c: "#a2762b", ground: "#c2ab52", tree: "#b8642a", free: false, base: 1, water: -1, land: 1,  early: 1,  late: 1, note: "Archers and forests. Solid, defensive play." },
+  { id: "quetzali", name: "Quetzali", c: "#2aa3b8", ground: "#84c99c", tree: "#2f8a5a", free: false, base: 1, water: -1, land: 1,  early: 1,  late: 1, note: "Defenders and fruit-heavy land. Tough to break." },
+  { id: "zebasi",   name: "Zebasi",   c: "#e07a1f", ground: "#d4bb5c", tree: "#6a8a2a", free: false, base: 1, water: -1, land: 2,  early: -1, late: 1, note: "Farming economy. Happiest on open, dry land." },
 ];
 
 // ---------- State ----------
@@ -370,13 +469,19 @@ function ranking() {
   return { tiers, pinned, warn: (pick && pick.warn) || {}, tips: playerTips(), source };
 }
 
-// ---------- Glyph map preview ----------
-// An old-school text map: one character per tile, shaped by map type and size.
+// ---------- Low-poly preview island ----------
+// Our own art in the game's flat, faceted style: an isometric diamond of tiles,
+// shaped by the map type and painted in the top tribe's terrain colours.
 function rng(seed) {
   let a = seed >>> 0;
   return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
 function hash(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h; }
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = c => Math.max(0, Math.min(255, Math.round(amt < 0 ? c * (1 + amt) : c + (255 - c) * amt)));
+  return `rgb(${f(n >> 16)},${f(n >> 8 & 255)},${f(n & 255)})`;
+}
 
 const GRID = { tiny: 9, small: 11, normal: 12, large: 14, huge: 16, massive: 20 };
 const SHAPES = {
@@ -387,74 +492,164 @@ const SHAPES = {
   archipelago: { water: 0.62, blobs: 11, r: 0.12, centre: false },
   waterworld:  { water: 0.84, blobs: 6,  r: 0.09, centre: false },
 };
-const TILE = {
-  deep:     ["\u2248", "#0048bd"],
-  coast:    ["~", "#0096ff"],
-  grass:    [".", "#009403"],
-  grass2:   [",", "#009403"],
-  forest:   ["\u2663", "#00c420"],
-  mountain: ["\u25b2", "#b1c9c3"],
-};
 
 function drawMap(top) {
+  const cv = document.getElementById("map");
+  const W = cv.parentElement.clientWidth;
+  if (!W) return;
   const N = GRID[state.size];
-  const cols = Math.min(N * 2, 40), rows = Math.round(N * 0.6) + 2;
   const shape = SHAPES[state.type];
-  const R = rng(hash(state.type + state.size));
+  const R = rng(hash(state.type + state.size + state.opp));
 
-  // Heights from soft blobs (in square map space), then a sea level that gives the right share of water.
+  // Heights from soft blobs, then pick the sea level that gives the right share of water.
   const blobs = [];
-  if (shape.centre) blobs.push({ x: 0.5, y: 0.5, r: 0.42, w: 1.4 });
-  for (let b = 0; b < shape.blobs; b++) blobs.push({ x: 0.08 + R() * 0.84, y: 0.08 + R() * 0.84, r: shape.r * (0.7 + R() * 0.6), w: 0.7 + R() * 0.6 });
+  if (shape.centre) blobs.push({ x: N / 2, y: N / 2, r: N * 0.42, w: 1.4 });
+  for (let b = 0; b < shape.blobs; b++) {
+    blobs.push({ x: 1 + R() * (N - 2), y: 1 + R() * (N - 2), r: N * shape.r * (0.7 + R() * 0.6), w: 0.7 + R() * 0.6 });
+  }
   const h = [];
-  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-    const u = (x + 0.5) / cols, v = (y + 0.5) / rows;
-    let val = R() * 0.25;
-    for (const b of blobs) val += b.w * Math.exp(-((u - b.x) ** 2 + (v - b.y) ** 2) / (b.r * b.r));
-    const edge = Math.min(x, y, cols - 1 - x, rows - 1 - y);
-    if (state.type !== "drylands" && state.type !== "lakes" && edge === 0) val *= 0.4;
-    h.push(val);
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    let v = R() * 0.25;
+    for (const b of blobs) { const d2 = (i - b.x) ** 2 + (j - b.y) ** 2; v += b.w * Math.exp(-d2 / (b.r * b.r)); }
+    const edge = Math.min(i, j, N - 1 - i, N - 1 - j);
+    if (state.type !== "drylands" && state.type !== "lakes" && edge === 0) v *= 0.4;
+    h.push(v);
   }
   const sorted = [...h].sort((a, b) => a - b);
   const sea = sorted[Math.min(sorted.length - 1, Math.floor(shape.water * sorted.length))];
-  const land = sorted.filter(v => v >= sea);
-  const peak = land[Math.floor(land.length * 0.86)] ?? Infinity;
-  const isLand = (x, y) => x >= 0 && y >= 0 && x < cols && y < rows && h[y * cols + x] >= sea;
+  const landSorted = sorted.filter(v => v >= sea);
+  const peak = landSorted[Math.floor(landSorted.length * 0.86)] ?? Infinity;
+  const isLand = (i, j) => i >= 0 && j >= 0 && i < N && j < N && h[i * N + j] >= sea;
 
-  const kinds = h.map((val, k) => {
-    const x = k % cols, y = Math.floor(k / cols);
-    if (val < sea) return isLand(x - 1, y) || isLand(x + 1, y) || isLand(x, y - 1) || isLand(x, y + 1) ? "coast" : "deep";
-    if (val >= peak && R() < 0.75) return "mountain";
-    const r = R();
-    return r < 0.28 ? "forest" : r < 0.6 ? "grass2" : "grass";
+  // Tile kinds
+  const kind = h.map((v, k) => {
+    if (v < sea) return "water";
+    if (v >= peak && R() < 0.75) return "mountain";
+    return R() < 0.3 ? "forest" : "grass";
   });
-  // Capital: the grass tile nearest the middle
+  // Capital on the grass tile nearest the middle of the land
   let cap = -1, best = Infinity;
-  kinds.forEach((k, i) => {
-    if (!k.startsWith("grass")) return;
-    const d = ((i % cols) / cols - 0.5) ** 2 + (Math.floor(i / cols) / rows - 0.5) ** 2;
-    if (d < best) { best = d; cap = i; }
+  kind.forEach((k, idx) => {
+    if (k !== "grass") return;
+    const d = (Math.floor(idx / N) - N / 2) ** 2 + (idx % N - N / 2) ** 2;
+    if (d < best) { best = d; cap = idx; }
   });
 
-  const esc = c => c === "<" ? "&lt;" : c === "&" ? "&amp;" : c;
-  let html = "";
-  for (let y = 0; y < rows; y++) {
-    let run = "", runColor = null;
-    const flush = () => { if (run) html += `<span style="color:${runColor}">${run}</span>`; run = ""; };
-    for (let x = 0; x < cols; x++) {
-      const i = y * cols + x;
-      const [ch, col] = i === cap && top ? ["@", top.c] : TILE[kinds[i]];
-      if (col !== runColor) { flush(); runColor = col; }
-      run += esc(ch);
+  // Geometry
+  const pad = 6;
+  const tw = (W - pad * 2) / N, th = tw / 2, depth = Math.max(3, th * 0.32);
+  const topPad = th * 1.4;
+  const H = Math.ceil(topPad + N * th + depth + pad);
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  cv.style.height = H + "px";
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.lineJoin = "round";
+
+  const poly = (pts, fill) => {
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
+    ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = fill; ctx.lineWidth = 0.6; ctx.stroke();
+  };
+
+  const ground = top ? top.ground : "#8cc95a";
+  const tree = top ? top.tree : "#3e8a3a";
+  const roof = top ? top.c : "#2f57d6";
+  const x0 = W / 2, y0 = topPad;
+
+  // Back to front so nearer tiles overlap farther ones
+  for (let s = 0; s <= 2 * (N - 1); s++) {
+    for (let i = 0; i < N; i++) {
+      const j = s - i;
+      if (j < 0 || j >= N) continue;
+      const idx = i * N + j, k = kind[idx];
+      const cx = x0 + (i - j) * tw / 2, cy = y0 + (i + j) * th / 2;
+      const jit = (R() - 0.5) * 0.08;
+
+      if (k === "water") {
+        const coast = isLand(i - 1, j) || isLand(i + 1, j) || isLand(i, j - 1) || isLand(i, j + 1);
+        const base = coast ? "#58bdf0" : "#3a8fd8";
+        const yT = cy + depth;
+        poly([[cx, yT], [cx + tw / 2, yT + th / 2], [cx, yT + th], [cx - tw / 2, yT + th / 2]], shade(base, jit));
+        poly([[cx, yT], [cx, yT + th], [cx - tw / 2, yT + th / 2]], shade(base, 0.07 + jit));
+        continue;
+      }
+
+      const g = shade(ground, jit);
+      // Block sides
+      poly([[cx - tw / 2, cy + th / 2], [cx, cy + th], [cx, cy + th + depth], [cx - tw / 2, cy + th / 2 + depth]], shade(ground, -0.22));
+      poly([[cx, cy + th], [cx + tw / 2, cy + th / 2], [cx + tw / 2, cy + th / 2 + depth], [cx, cy + th + depth]], shade(ground, -0.36));
+      // Top, split into two facets
+      poly([[cx, cy], [cx + tw / 2, cy + th / 2], [cx, cy + th]], g);
+      poly([[cx, cy], [cx, cy + th], [cx - tw / 2, cy + th / 2]], shade(ground, 0.1 + jit));
+
+      const mx = cx, my = cy + th / 2;
+      if (k === "mountain") {
+        const mw = tw * 0.42, apex = [mx + (R() - 0.5) * tw * 0.08, my - th * 1.25];
+        poly([[mx - mw, my + th * 0.12], [mx, my + th * 0.35], apex], "#c9ccd6");
+        poly([[mx, my + th * 0.35], [mx + mw, my + th * 0.12], apex], "#8d93a6");
+        const t = 0.32;
+        const lerp = (a, b) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+        poly([lerp(apex, [mx - mw, my + th * 0.12]), lerp(apex, [mx, my + th * 0.35]), apex], "#ffffff");
+        poly([lerp(apex, [mx, my + th * 0.35]), lerp(apex, [mx + mw, my + th * 0.12]), apex], "#dfe4ee");
+      } else if (k === "forest") {
+        const spots = [[-0.16, -0.02], [0.14, 0.06], [0, 0.16]];
+        for (const [dx, dy] of spots) {
+          const bx = mx + dx * tw, by = my + dy * th, tw2 = tw * 0.12, tH = th * 0.95;
+          poly([[bx - tw2, by], [bx, by + th * 0.08], [bx, by - tH]], shade(tree, 0.12));
+          poly([[bx, by + th * 0.08], [bx + tw2, by], [bx, by - tH]], shade(tree, -0.2));
+        }
+      } else if (idx === cap) {
+        const bw = tw * 0.22, bh = th * 0.55, by = my + th * 0.15;
+        poly([[mx - bw, by - bh], [mx, by - bh + th * 0.18], [mx, by + th * 0.18], [mx - bw, by]], "#f2e6cf");
+        poly([[mx, by - bh + th * 0.18], [mx + bw, by - bh], [mx + bw, by], [mx, by + th * 0.18]], "#cdbd9c");
+        const rp = [mx, by - bh - th * 0.75];
+        poly([[mx - bw * 1.15, by - bh], [mx, by - bh + th * 0.22], rp], shade(roof, 0.1));
+        poly([[mx, by - bh + th * 0.22], [mx + bw * 1.15, by - bh], rp], shade(roof, -0.25));
+      }
     }
-    flush();
-    html += "\n";
   }
-  document.getElementById("map").innerHTML = html;
 
   const sz = SIZES.find(s => s.id === state.size), mt = MAP_TYPES.find(m => m.id === state.type);
   document.getElementById("map-caption").textContent =
-    `${mt.label} · ${sz.label}${top ? ` · @ = ${top.name} capital` : ""}`;
+    `${mt.label} · ${sz.label}${top ? ` · ${top.name} land` : ""}`;
+}
+
+
+// ---------- Tribe heads ----------
+// Original low-poly portraits: a faceted face plus headgear that hints at each tribe's theme.
+// Every shape gets a darker right half, which gives the flat two-facet look.
+const FACE = [[12,16],[28,16],[31,24],[27,34],[13,34],[9,24]];
+const HEADS = {
+  xinxi:    { skin: "#f0c99a", front: [[[[1,19],[20,3],[39,19],[20,15]], "#d23a32"], [[[9,18],[31,18],[29,16],[11,16]], "#7a1d1a"]] },
+  imperius: { skin: "#f3c9a0", front: [[[[10,18],[12,9],[20,6],[28,9],[30,18]], "#3d63d8"], [[[17,7],[20,0],[23,7]], "#f2c94c"], [[[9,17],[13,17],[13,28],[9,25]], "#3d63d8"], [[[27,17],[31,17],[31,25],[27,28]], "#3d63d8"]] },
+  bardur:   { skin: "#e9bf96", back: [[[[5,32],[6,12],[20,3],[34,12],[35,32],[20,41]], "#6b5442"]], front: [[[[10,18],[20,10],[30,18],[30,15],[20,7],[10,15]], "#8a6d55"]] },
+  oumaji:   { skin: "#c98e5e", front: [[[[10,17],[12,8],[20,5],[28,8],[30,17]], "#ecd04a"], [[[10,27],[30,27],[27,35],[13,35]], "#f2de86"]] },
+  kickoo:   { skin: "#a8724a", front: [[[[10,17],[10,12],[30,12],[30,17]], "#3ccf55"], [[[30,12],[37,8],[36,17]], "#2ea845"], [[[13,12],[20,6],[27,12]], "#2a1c16"]] },
+  hoodrick: { skin: "#f0c79c", back: [[[[5,34],[8,14],[20,0],[32,14],[35,34],[20,42]], "#9a6a2a"]], front: [[[[10,18],[20,9],[30,18],[30,15],[20,6],[10,15]], "#b8842f"]] },
+  luxidoor: { skin: "#d9a57c", front: [[[[11,17],[11,7],[15,12],[20,4],[25,12],[29,7],[29,17]], "#f2c94c"], [[[18,12],[20,10],[22,12],[20,14]], "#a24ad6"]] },
+  vengir:   { skin: "#d9b08a", noEyes: true, front: [[[[8,28],[8,12],[20,5],[32,12],[32,28],[20,35]], "#9ea5aa"], [[[11,20],[29,20],[29,24],[11,24]], "#22262b"], [[[19,5],[21,5],[21,34],[19,34]], "#7d8489"]] },
+  zebasi:   { skin: "#8a5a3a", front: [[[[11,17],[12,3],[28,3],[29,17]], "#e8862a"], [[[12,8],[28,8],[28,10],[12,10]], "#f6c26b"]] },
+  aimo:     { skin: "#f2d2a8", front: [[[[10,17],[30,17],[30,14],[10,14]], "#2fbf9a"], [[[17,9],[23,9],[24,14],[16,14]], "#2a2a33"]] },
+  quetzali: { skin: "#b97a50", back: [[[[20,16],[3,9],[8,4]], "#2aa3b8"], [[[20,16],[10,1],[17,0]], "#3fd17a"], [[[20,16],[18,-1],[23,-1]], "#2aa3b8"], [[[20,16],[24,0],[30,1]], "#3fd17a"], [[[20,16],[32,4],[37,9]], "#2aa3b8"]], front: [[[[10,17],[30,17],[30,14],[10,14]], "#e8d24a"]] },
+  yadakk:   { skin: "#c48a5c", front: [[[[9,18],[10,9],[20,4],[30,9],[31,18]], "#9a3a2c"], [[[18,12],[20,9],[22,12],[20,15]], "#f2c94c"]] },
+  aquarion: { skin: "#f2b4a8", back: [[[[9,22],[2,16],[10,29]], "#e86f8a"], [[[31,22],[38,16],[30,29]], "#e86f8a"]], front: [[[[13,16],[20,1],[27,16],[20,13]], "#e86f8a"]] },
+  elyrion:  { skin: "#f4d6c0", back: [[[[10,22],[1,12],[11,27]], "#f4d6c0"], [[[30,22],[39,12],[29,27]], "#f4d6c0"]], front: [[[[10,16],[30,16],[30,14],[10,14]], "#d9318c"], [[[13,14],[15,8],[17,14]], "#3fd17a"], [[[18,14],[20,7],[22,14]], "#d9318c"], [[[23,14],[25,8],[27,14]], "#3fd17a"]] },
+  polaris:  { skin: "#f6e2d4", back: [[[[4,31],[5,12],[20,3],[35,12],[36,31],[20,42]], "#eaf6fb"]], front: [[[[9,18],[20,9],[31,18],[31,16],[20,6],[9,16]], "#b9e2f2"]] },
+  cymanti:  { skin: "#c9d46c", front: [[[[16,16],[10,3],[11,2],[17,15]], "#5a6a1a"], [[[24,16],[30,3],[29,2],[23,15]], "#5a6a1a"], [[[9,4],[12,1],[13,5]], "#c0569a"], [[[31,4],[28,1],[27,5]], "#c0569a"], [[[10,17],[20,11],[30,17],[30,15],[20,9],[10,15]], "#9bd13a"]] },
+};
+function headSVG(t) {
+  const d = HEADS[t.id];
+  const pts = a => a.map(p => p.join(",")).join(" ");
+  const shapes = [...(d.back || []), [FACE, d.skin], ...(d.front || [])];
+  const body = shapes.map(([p, c]) =>
+    `<polygon points="${pts(p)}" fill="${c}"/><polygon points="${pts(p)}" fill="#000" fill-opacity=".16" clip-path="url(#half)"/>`
+  ).join("");
+  const eyes = d.noEyes ? "" : `<rect x="14" y="23" width="3" height="3.5" fill="#23262f"/><rect x="23" y="23" width="3" height="3.5" fill="#23262f"/>`;
+  return `<svg class="head" viewBox="0 -2 40 46" aria-hidden="true"><defs><clipPath id="half"><rect x="20" y="-5" width="25" height="55"/></clipPath></defs>${body}${eyes}</svg>`;
 }
 
 // ---------- Rendering ----------
@@ -505,7 +700,7 @@ function render() {
   let rank = 0;
   $("results").innerHTML = tiers.map((list, ti) => `
     <div class="tier" data-t="${Math.min(ti + 1, 7)}">
-      <div class="tier-head">TIER ${ti + 1}</div>
+      <div class="tier-badge" aria-label="Tier ${ti + 1}">${ti + 1}</div>
       <div class="tier-list">
         ${list.map(r => {
           rank++;
@@ -514,9 +709,10 @@ function render() {
           const caution = (warn[r.t.id] ? `<div class="warn">${warn[r.t.id]}</div>` : "")
             + (tips[r.t.id] ? `<div class="tip">${tips[r.t.id]}</div>` : "");
           return `<div class="tribe${top ? " top" : ""}">
-            <div class="glyph" style="color:${r.t.c}" aria-hidden="true">${r.t.g}</div>
+            <div class="badge" style="--c:${shade(r.t.c, -0.45)}">${headSVG(r.t)}</div>
             <div class="body">
-              <div><span class="name">${r.t.name}</span>${top ? `<span class="stars" aria-hidden="true">***</span>` : ""}</div>
+              ${top ? `<div class="stars" aria-hidden="true">★★★</div>` : ""}
+              <div class="name">${r.t.name}</div>
               <div class="note">${r.t.note}</div>
               ${why}
               ${caution}
@@ -552,6 +748,8 @@ $("own-free").addEventListener("click", () => {
   state.owned = new Set(TRIBES.filter(t => t.free).map(t => t.id));
   store.set("owned", [...state.owned]); renderOwned(); render();
 });
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 
 renderControls();
 render();
