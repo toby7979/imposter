@@ -49,11 +49,11 @@ button { font: inherit; }
 .wip h2 { color: var(--gold); font-size: 1.5rem; letter-spacing: .08em; }
 .wip p { margin: 0; max-width: 40ch; }
 .wip-btn {
-  cursor: pointer; background: none; color: var(--gold);
+  cursor: pointer; background: none; color: var(--gold); text-decoration: none;
   border: 1px solid var(--gold); padding: 2px 10px;
 }
 .wip-btn:hover, .wip-btn:focus-visible { background: var(--gold); color: var(--bg); outline: none; }
-.wip-fallback, .wip-done { color: var(--dim); }
+.wip-note { color: var(--dim); font-size: .85rem; }
 
 header { text-align: center; }
 header h1 { font-size: 2.1rem; color: var(--cyan); letter-spacing: .1em; text-transform: uppercase; }
@@ -136,9 +136,8 @@ footer a { color: var(--cyan); }
     <div class="wip-body">
       <h2 id="wip-title">[!] Work in progress</h2>
       <p>Tiers and tips are still being tuned. Think a tribe is in the wrong place? Tell us.</p>
-      <button type="button" class="wip-btn" id="suggest">[ Submit a suggestion ]</button>
-      <p class="wip-fallback" id="suggest-fallback" hidden>Suggestions can't be sent from here on your account. Send yours to whoever shared this link with you.</p>
-      <p class="wip-done" id="suggest-done" hidden>Type your suggestion in the comment box and send it.</p>
+      <a class="wip-btn" id="suggest" href="https://forms.gle/5PyaQowQpJ5NSRXq9" target="_blank" rel="noopener">[ Submit a suggestion ]</a>
+      <p class="wip-note">Opens a short Google Form. No sign-in needed.</p>
     </div>
     <div class="wip-stripes" aria-hidden="true"></div>
   </section>
@@ -552,20 +551,6 @@ $("own-all").addEventListener("click", () => {
 $("own-free").addEventListener("click", () => {
   state.owned = new Set(TRIBES.filter(t => t.free).map(t => t.id));
   store.set("owned", [...state.owned]); renderOwned(); render();
-});
-
-// Suggestions go in as comments on this page (the claude.ai comment box).
-let commentsApi;
-$("suggest").addEventListener("click", async () => {
-  const showFallback = () => { $("suggest").hidden = true; $("suggest-fallback").hidden = false; };
-  try {
-    if (commentsApi === undefined) commentsApi = window.claude ? await window.claude.use("comments") : null;
-    if (!commentsApi) return showFallback();
-    const res = await commentsApi.openComposer({ element: $("wip") });
-    if (res && res.opened) $("suggest-done").hidden = false;
-  } catch (err) {
-    if (!err || err.code !== "rate_limited") showFallback();
-  }
 });
 
 renderControls();
