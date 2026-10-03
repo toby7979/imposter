@@ -173,6 +173,22 @@ details.owned .seg { margin-top: 10px; }
   font-size: .88rem;
   position: relative;
 }
+.tip {
+  margin-top: 8px;
+  padding: 6px 10px 6px 30px;
+  border-radius: 8px;
+  background: rgba(106, 210, 106, .14);
+  color: var(--tier-2);
+  font-size: .88rem;
+  position: relative;
+}
+.tip::before {
+  content: "\2605";
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--tier-2); color: var(--tier-ink);
+  font-size: .65rem; text-align: center; line-height: 16px;
+}
 .warn::before {
   content: "!";
   position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
@@ -346,8 +362,8 @@ function sizeTweaks(tiers) {
   };
   // Lakes: Elyrion only earns tier 3 on Large and bigger; below that it drops to the top of tier 4.
   if (state.type === "lakes" && !BIG.includes(state.size)) move("elyrion", 3, 0);
-  // Continents: on Large and bigger, Elyrion moves one place up, above Ai-Mo.
-  if (state.type === "continents" && BIG.includes(state.size)) move("elyrion", 1, 1);
+  // Continents: Elyrion wins big maps, so on Large and bigger it leads tier 2.
+  if (state.type === "continents" && BIG.includes(state.size)) move("elyrion", 1, 0);
   return tiers;
 }
 
@@ -358,6 +374,14 @@ const PLAYER_PICKS = [
   { type: "waterworld", sizes: ["tiny", "small"], top: ["polaris", "aquarion"] },
   { type: "waterworld", sizes: ["normal", "large", "huge", "massive"], top: ["aquarion", "polaris"] },
 ];
+// Player tips: notes that show on a tribe's card without changing the tiers.
+const PLAYER_TIPS = [
+  { type: "continents", sizes: BIG, tips: { elyrion: "Wins big maps. On Large and bigger Continents maps, Elyrion is the one to beat." } },
+];
+function playerTips() {
+  return Object.assign({}, ...PLAYER_TIPS.filter(p => p.type === state.type && p.sizes.includes(state.size)).map(p => p.tips));
+}
+
 function playerPick() {
   return PLAYER_PICKS.find(p => p.type === state.type && p.sizes.includes(state.size));
 }
@@ -391,7 +415,7 @@ function ranking() {
     tiers[0] = [...pinned, ...tiers[0]];
   }
   tiers = tiers.filter(t => t.length);
-  return { tiers, pinned, warn: (pick && pick.warn) || {}, source };
+  return { tiers, pinned, warn: (pick && pick.warn) || {}, tips: playerTips(), source };
 }
 
 // ---------- Low-poly preview island ----------
@@ -605,7 +629,7 @@ function renderOwned() {
 }
 
 function render() {
-  const { tiers, pinned, warn, source } = ranking();
+  const { tiers, pinned, warn, tips, source } = ranking();
   const first = tiers[0] && tiers[0][0];
   drawMap(first && first.t);
   if (!first) {
@@ -630,7 +654,8 @@ function render() {
           rank++;
           const top = topPicks.includes(r);
           const why = top ? `<ul class="why">${whyFor(r, ti + 1).map(x => `<li>${x}</li>`).join("")}</ul>` : "";
-          const caution = warn[r.t.id] ? `<div class="warn">${warn[r.t.id]}</div>` : "";
+          const caution = (warn[r.t.id] ? `<div class="warn">${warn[r.t.id]}</div>` : "")
+            + (tips[r.t.id] ? `<div class="tip">${tips[r.t.id]}</div>` : "");
           return `<div class="tribe${top ? " top" : ""}">
             <div class="badge" style="--c:${shade(r.t.c, -0.45)}">${headSVG(r.t)}</div>
             <div class="body">
