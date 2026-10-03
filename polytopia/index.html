@@ -352,13 +352,17 @@ const PLAYER_PICKS = [
     warn: { oumaji: "Watch out: Vengir can counter Oumaji on this map." } },
   { type: "waterworld", sizes: ["tiny", "small"], top: ["polaris", "aquarion"] },
   { type: "waterworld", sizes: ["normal", "large", "huge", "massive"], top: ["aquarion", "polaris"] },
+  { type: "continents", sizes: ["massive"], top: ["elyrion"] },
 ];
 // Player tips: notes that show on a tribe's card without changing the tiers.
+// type "*" applies to every map type; later entries win when two match.
 const PLAYER_TIPS = [
-  { type: "continents", sizes: BIG, tips: { elyrion: "Wins big maps. On Large and bigger Continents maps, Elyrion is the one to beat." } },
+  { type: "*", sizes: BIG, tips: { elyrion: "Wins lots of big maps. The more room it has, the stronger it gets." } },
+  { type: "continents", sizes: ["large", "huge"], tips: { elyrion: "Wins big maps. On Large and bigger Continents maps, Elyrion is the one to beat." } },
+  { type: "continents", sizes: ["massive"], tips: { elyrion: "Wins Massive Continents maps." } },
 ];
 function playerTips() {
-  return Object.assign({}, ...PLAYER_TIPS.filter(p => p.type === state.type && p.sizes.includes(state.size)).map(p => p.tips));
+  return Object.assign({}, ...PLAYER_TIPS.filter(p => (p.type === "*" || p.type === state.type) && p.sizes.includes(state.size)).map(p => p.tips));
 }
 
 function playerPick() {
