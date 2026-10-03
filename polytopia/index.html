@@ -1,4 +1,4 @@
-<title>Polytopia Tribe Picker</title>
+<title>Tribe Picker for Polytopia</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -131,7 +131,7 @@ details.owned .seg { margin-top: 10px; }
 
 .tribe {
   display: grid;
-  grid-template-columns: 34px 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 12px;
   align-items: center;
   background: var(--panel);
@@ -143,14 +143,8 @@ details.owned .seg { margin-top: 10px; }
 .tribe .name { font-size: 1.05rem; font-weight: 800; }
 .tribe .note { color: var(--muted); font-size: .88rem; font-weight: 600; }
 .tribe .body { min-width: 0; }
-.shield {
-  width: 34px; height: 38px;
-  clip-path: polygon(50% 0, 100% 22%, 100% 62%, 50% 100%, 0 62%, 0 22%);
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.28) 0 50%, transparent 50%),
-    linear-gradient(180deg, transparent 0 60%, rgba(0,0,0,.22) 60%),
-    var(--c);
-}
+.head { width: 44px; height: 48px; display: block; }
+.tier[data-t="S"] .head { width: 58px; height: 64px; }
 .tier[data-t="S"] .tribe { box-shadow: 0 4px 0 var(--edge), inset 0 0 0 3px var(--tier-s); padding: 14px; }
 .tier[data-t="S"] .tribe .name { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
 .stars { color: var(--gold); letter-spacing: 2px; font-size: .9rem; }
@@ -198,7 +192,9 @@ footer { color: var(--muted); font-size: .8rem; font-weight: 600; text-align: ce
   <section class="results" id="results" aria-live="polite"></section>
 
   <footer>
-    Unofficial fan-made tool, not affiliated with Midjiwan or The Battle of Polytopia.
+    Unofficial fan-made tool, not made or approved by Midjiwan or The Battle of Polytopia.
+    All artwork here is original. For the real game, visit
+    <a href="https://polytopia.io/" style="color: var(--accent)">polytopia.io</a>.
     Rankings are a rule of thumb built from common community advice, not official game data.
   </footer>
 </div>
@@ -448,6 +444,40 @@ function drawMap(top) {
     `${mt.label} · ${sz.label}${top ? ` · ${top.name} land` : ""}`;
 }
 
+
+// ---------- Tribe heads ----------
+// Original low-poly portraits: a faceted face plus headgear that hints at each tribe's theme.
+// Every shape gets a darker right half, which gives the flat two-facet look.
+const FACE = [[12,16],[28,16],[31,24],[27,34],[13,34],[9,24]];
+const HEADS = {
+  xinxi:    { skin: "#f0c99a", front: [[[[1,19],[20,3],[39,19],[20,15]], "#d23a32"], [[[9,18],[31,18],[29,16],[11,16]], "#7a1d1a"]] },
+  imperius: { skin: "#f3c9a0", front: [[[[10,18],[12,9],[20,6],[28,9],[30,18]], "#3d63d8"], [[[17,7],[20,0],[23,7]], "#f2c94c"], [[[9,17],[13,17],[13,28],[9,25]], "#3d63d8"], [[[27,17],[31,17],[31,25],[27,28]], "#3d63d8"]] },
+  bardur:   { skin: "#e9bf96", back: [[[[5,32],[6,12],[20,3],[34,12],[35,32],[20,41]], "#6b5442"]], front: [[[[10,18],[20,10],[30,18],[30,15],[20,7],[10,15]], "#8a6d55"]] },
+  oumaji:   { skin: "#c98e5e", front: [[[[10,17],[12,8],[20,5],[28,8],[30,17]], "#ecd04a"], [[[10,27],[30,27],[27,35],[13,35]], "#f2de86"]] },
+  kickoo:   { skin: "#a8724a", front: [[[[10,17],[10,12],[30,12],[30,17]], "#3ccf55"], [[[30,12],[37,8],[36,17]], "#2ea845"], [[[13,12],[20,6],[27,12]], "#2a1c16"]] },
+  hoodrick: { skin: "#f0c79c", back: [[[[5,34],[8,14],[20,0],[32,14],[35,34],[20,42]], "#9a6a2a"]], front: [[[[10,18],[20,9],[30,18],[30,15],[20,6],[10,15]], "#b8842f"]] },
+  luxidoor: { skin: "#d9a57c", front: [[[[11,17],[11,7],[15,12],[20,4],[25,12],[29,7],[29,17]], "#f2c94c"], [[[18,12],[20,10],[22,12],[20,14]], "#a24ad6"]] },
+  vengir:   { skin: "#d9b08a", noEyes: true, front: [[[[8,28],[8,12],[20,5],[32,12],[32,28],[20,35]], "#9ea5aa"], [[[11,20],[29,20],[29,24],[11,24]], "#22262b"], [[[19,5],[21,5],[21,34],[19,34]], "#7d8489"]] },
+  zebasi:   { skin: "#8a5a3a", front: [[[[11,17],[12,3],[28,3],[29,17]], "#e8862a"], [[[12,8],[28,8],[28,10],[12,10]], "#f6c26b"]] },
+  aimo:     { skin: "#f2d2a8", front: [[[[10,17],[30,17],[30,14],[10,14]], "#2fbf9a"], [[[17,9],[23,9],[24,14],[16,14]], "#2a2a33"]] },
+  quetzali: { skin: "#b97a50", back: [[[[20,16],[3,9],[8,4]], "#2aa3b8"], [[[20,16],[10,1],[17,0]], "#3fd17a"], [[[20,16],[18,-1],[23,-1]], "#2aa3b8"], [[[20,16],[24,0],[30,1]], "#3fd17a"], [[[20,16],[32,4],[37,9]], "#2aa3b8"]], front: [[[[10,17],[30,17],[30,14],[10,14]], "#e8d24a"]] },
+  yadakk:   { skin: "#c48a5c", front: [[[[9,18],[10,9],[20,4],[30,9],[31,18]], "#9a3a2c"], [[[18,12],[20,9],[22,12],[20,15]], "#f2c94c"]] },
+  aquarion: { skin: "#f2b4a8", back: [[[[9,22],[2,16],[10,29]], "#e86f8a"], [[[31,22],[38,16],[30,29]], "#e86f8a"]], front: [[[[13,16],[20,1],[27,16],[20,13]], "#e86f8a"]] },
+  elyrion:  { skin: "#f4d6c0", back: [[[[10,22],[1,12],[11,27]], "#f4d6c0"], [[[30,22],[39,12],[29,27]], "#f4d6c0"]], front: [[[[10,16],[30,16],[30,14],[10,14]], "#d9318c"], [[[13,14],[15,8],[17,14]], "#3fd17a"], [[[18,14],[20,7],[22,14]], "#d9318c"], [[[23,14],[25,8],[27,14]], "#3fd17a"]] },
+  polaris:  { skin: "#f6e2d4", back: [[[[4,31],[5,12],[20,3],[35,12],[36,31],[20,42]], "#eaf6fb"]], front: [[[[9,18],[20,9],[31,18],[31,16],[20,6],[9,16]], "#b9e2f2"]] },
+  cymanti:  { skin: "#c9d46c", front: [[[[16,16],[10,3],[11,2],[17,15]], "#5a6a1a"], [[[24,16],[30,3],[29,2],[23,15]], "#5a6a1a"], [[[9,4],[12,1],[13,5]], "#c0569a"], [[[31,4],[28,1],[27,5]], "#c0569a"], [[[10,17],[20,11],[30,17],[30,15],[20,9],[10,15]], "#9bd13a"]] },
+};
+function headSVG(t) {
+  const d = HEADS[t.id];
+  const pts = a => a.map(p => p.join(",")).join(" ");
+  const shapes = [...(d.back || []), [FACE, d.skin], ...(d.front || [])];
+  const body = shapes.map(([p, c]) =>
+    `<polygon points="${pts(p)}" fill="${c}"/><polygon points="${pts(p)}" fill="#000" fill-opacity=".16" clip-path="url(#half)"/>`
+  ).join("");
+  const eyes = d.noEyes ? "" : `<rect x="14" y="23" width="3" height="3.5" fill="#23262f"/><rect x="23" y="23" width="3" height="3.5" fill="#23262f"/>`;
+  return `<svg class="head" viewBox="0 -2 40 46" aria-hidden="true"><defs><clipPath id="half"><rect x="20" y="-5" width="25" height="55"/></clipPath></defs>${body}${eyes}</svg>`;
+}
+
 // ---------- Rendering ----------
 const $ = id => document.getElementById(id);
 
@@ -502,7 +532,7 @@ function render() {
           const top = tier === "S";
           const why = top ? `<ul class="why">${reasons(r).map(x => `<li>${x}</li>`).join("")}</ul>` : "";
           return `<div class="tribe">
-            <div class="shield" style="--c:${r.t.c}" aria-hidden="true"></div>
+            ${headSVG(r.t)}
             <div class="body">
               ${top ? `<div class="stars" aria-hidden="true">★★★</div>` : ""}
               <div class="name">${r.t.name}</div>
