@@ -361,6 +361,7 @@ const ELYRION_LANDS = ["drylands", "lakes", "pangea", "continents"];
 const PLAYER_TIPS = [
   { type: ELYRION_LANDS, sizes: ["large"], tips: { elyrion: "Strong on big maps. On Huge and Massive it's the one to beat." } },
   { type: ELYRION_LANDS, sizes: ["huge", "massive"], tips: { elyrion: "Wins Huge and Massive maps." } },
+  { type: "archipelago", sizes: SIZES.map(s => s.id), tips: { polaris: "Wins most Archipelago maps." } },
 ];
 const matches = p => [].concat(p.type).includes(state.type) && p.sizes.includes(state.size);
 function playerTips() {
