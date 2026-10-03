@@ -58,6 +58,33 @@ header { text-align: center; }
 header h1 { font-size: 2.3rem; line-height: 1; margin: 0; text-wrap: balance; }
 header p { margin: 6px 0 0; color: var(--muted); font-weight: 600; }
 
+/* Work-in-progress banner */
+.wip {
+  background: var(--gold);
+  color: var(--tier-ink);
+  border-radius: 16px;
+  box-shadow: 0 5px 0 #b8860b;
+  overflow: hidden;
+  text-align: center;
+}
+.wip-stripes {
+  height: 12px;
+  background: repeating-linear-gradient(-45deg, var(--tier-ink) 0 12px, var(--gold) 12px 24px);
+}
+.wip-body { padding: 14px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.wip h2 { margin: 0; font-size: 2rem; line-height: 1; text-shadow: none; text-wrap: balance; }
+.wip p { margin: 0; font-weight: 700; max-width: 34ch; }
+.wip-btn {
+  font: inherit; font-weight: 800; font-size: 1rem;
+  cursor: pointer; border: 0;
+  padding: 10px 20px; border-radius: 12px;
+  background: var(--tier-ink); color: #fff;
+  box-shadow: 0 3px 0 #000;
+}
+.wip-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+.wip-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.wip-fallback, .wip-done { font-size: .9rem; }
+
 /* Preview island */
 .island { position: relative; }
 .island canvas { display: block; width: 100%; height: auto; }
@@ -203,6 +230,18 @@ footer { color: var(--muted); font-size: .8rem; font-weight: 600; text-align: ce
 </style>
 
 <div class="wrap">
+  <section class="wip" id="wip" aria-labelledby="wip-title">
+    <div class="wip-stripes" aria-hidden="true"></div>
+    <div class="wip-body">
+      <h2 class="display" id="wip-title">Work in progress!</h2>
+      <p>Tiers and tips are still being tuned. Think a tribe is in the wrong place? Tell us.</p>
+      <button type="button" class="wip-btn" id="suggest">Submit a suggestion</button>
+      <p class="wip-fallback" id="suggest-fallback" hidden>Suggestions can't be sent from here on your account. Send yours to whoever shared this link with you.</p>
+      <p class="wip-done" id="suggest-done" hidden>Type your suggestion in the comment box and send it.</p>
+    </div>
+    <div class="wip-stripes" aria-hidden="true"></div>
+  </section>
+
   <header>
     <h1 class="display">Tribe Picker</h1>
     <p>Set up your game. Best tribe for it comes out on top.</p>
@@ -697,6 +736,20 @@ $("own-free").addEventListener("click", () => {
 });
 let resizeTimer;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
+
+// Suggestions go in as comments on this page (the claude.ai comment box).
+let commentsApi;
+$("suggest").addEventListener("click", async () => {
+  const showFallback = () => { $("suggest").hidden = true; $("suggest-fallback").hidden = false; };
+  try {
+    if (commentsApi === undefined) commentsApi = window.claude ? await window.claude.use("comments") : null;
+    if (!commentsApi) return showFallback();
+    const res = await commentsApi.openComposer({ element: $("wip") });
+    if (res && res.opened) $("suggest-done").hidden = false;
+  } catch (err) {
+    if (!err || err.code !== "rate_limited") showFallback();
+  }
+});
 
 renderControls();
 render();
