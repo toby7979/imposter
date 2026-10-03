@@ -254,6 +254,10 @@ footer { color: var(--muted); font-size: .8rem; font-weight: 600; text-align: ce
 
   <form class="panel" id="setup" onsubmit="return false">
     <fieldset>
+      <legend>Game mode</legend>
+      <div class="seg" id="mode"></div>
+    </fieldset>
+    <fieldset>
       <legend>Opponents</legend>
       <div class="seg" id="opp"></div>
     </fieldset>
@@ -308,6 +312,11 @@ const SIZES = [
   { id: "huge",    label: "Huge",    tiles: 400, e: -0.2, g: 1.1 },
   { id: "massive", label: "Massive", tiles: 900, e: -0.4, g: 1.4 },
 ];
+// Might: capture every capital. Glory: race to the score target, so economy matters more.
+const MODES = [
+  { id: "might", label: "Might", hint: "capitals", e: 0.2, g: 0 },
+  { id: "glory", label: "Glory", hint: "score", e: -0.4, g: 0.9 },
+];
 const OPP_WEIGHTS = { 1: { e: 0.7, g: -0.2 }, 2: { e: 0.3, g: 0.1 }, 4: { e: 0, g: 0.4 }, 9: { e: -0.3, g: 0.8 } };
 
 // base = all-round strength; water/land/early/late = how the tribe likes each condition (-2..3)
@@ -337,6 +346,7 @@ const store = {
   set(k, v) { try { localStorage.setItem("polypick:" + k, JSON.stringify(v)); } catch {} },
 };
 const state = {
+  mode: store.get("mode", "might"),
   opp: store.get("opp1v1", 1),
   type: store.get("type", "continents"),
   size: store.get("size", "normal"),
@@ -348,11 +358,12 @@ function scoreTribe(t) {
   const mt = MAP_TYPES.find(m => m.id === state.type);
   const sz = SIZES.find(s => s.id === state.size);
   const op = OPP_WEIGHTS[state.opp];
+  const md = MODES.find(m => m.id === state.mode);
   const parts = {
     water: t.water * mt.w,
     land:  t.land * mt.l,
-    early: t.early * (sz.e + op.e),
-    late:  t.late * (sz.g + op.g),
+    early: t.early * (sz.e + op.e + md.e),
+    late:  t.late * (sz.g + op.g + md.g),
   };
   const total = t.base + parts.water + parts.land + parts.early + parts.late;
   return { t, total, parts };
@@ -369,7 +380,9 @@ function reasons(r) {
     if (k === "early") out.push(state.opp === 1
       ? `A one-on-one on a ${sz.label.toLowerCase()} map rewards a fast start.`
       : `A ${sz.label.toLowerCase()} map means early fights, and this tribe starts quickly.`);
-    if (k === "late")  out.push(state.opp >= 4
+    if (k === "late")  out.push(state.mode === "glory"
+      ? "Glory is a score race, and this tribe builds a big economy."
+      : state.opp >= 4
       ? `${state.opp} opponents means a long game, and this tribe grows strong over time.`
       : `A ${sz.label.toLowerCase()} map gives room to build, which this tribe uses well.`);
   }
@@ -435,8 +448,8 @@ function ranking() {
     source = "league";
     const ids = sizeTweaks(LEAGUE[state.type].map(t => [...t]));
     tiers = ids.map(t => t.map(byId).filter(Boolean));
-    // The lists are for 1v1. With more opponents, keep the tiers but reorder inside each one by score.
-    if (state.opp > 1) tiers.forEach(t => t.sort((a, b) => b.total - a.total));
+    // The lists are for 1v1 Might. For Glory or more opponents, keep the tiers but reorder inside each one by score.
+    if (state.opp > 1 || state.mode !== "might") tiers.forEach(t => t.sort((a, b) => b.total - a.total));
   } else {
     source = "score";
     // Tier 1 holds the top pick, plus the runner-up if it's genuinely close.
@@ -652,6 +665,7 @@ function segButtons(container, name, items, current, labelFn) {
 }
 
 function renderControls() {
+  segButtons($("mode"), "mode", MODES, state.mode, m => `${m.label}<small>${m.hint}</small>`);
   segButtons($("opp"), "opp", OPPONENTS, state.opp, o => o.label);
   segButtons($("type"), "type", MAP_TYPES, state.type, m => m.label);
   segButtons($("size"), "size", SIZES, state.size, s => `${s.label}<small>${s.tiles}</small>`);
@@ -709,7 +723,7 @@ function render() {
         }).join("")}
       </div>
     </div>`).join("") + (source === "league"
-      ? `<p class="source">Tiers from the Season 38 league list for ${mt.label} (1v1, Normal maps), adjusted for map size.${state.opp > 1 ? " With more than one opponent, tribes are reordered inside each tier." : ""}</p>`
+      ? `<p class="source">Tiers from the Season 38 league list for ${mt.label} (1v1 Might, Normal maps), adjusted for map size.${state.opp > 1 || state.mode !== "might" ? ` ${state.mode === "glory" ? "In Glory" : "With more than one opponent"}, tribes are reordered inside each tier.` : ""}</p>`
       : `<p class="source">Water World has no league list, so these tiers come from the picker's own scoring.</p>`);
 }
 
@@ -718,11 +732,12 @@ $("setup").addEventListener("change", e => {
   if (el.name === "opp") state.opp = Number(el.value);
   else if (el.name === "type") state.type = el.value;
   else if (el.name === "size") state.size = el.value;
+  else if (el.name === "mode") state.mode = el.value;
   else if (el.id.startsWith("own-")) {
     el.checked ? state.owned.add(el.value) : state.owned.delete(el.value);
     renderOwned();
   }
-  store.set("opp1v1", state.opp); store.set("type", state.type); store.set("size", state.size);
+  store.set("mode", state.mode); store.set("opp1v1", state.opp); store.set("type", state.type); store.set("size", state.size);
   store.set("owned", [...state.owned]);
   render();
 });
