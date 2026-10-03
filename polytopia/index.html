@@ -17,10 +17,13 @@
   --accent: #3ec6f0;
   --accent-edge: #1f8db8;
   --gold: #ffc93c;
-  --tier-s: #ffc93c;
-  --tier-a: #6ad26a;
-  --tier-b: #4fa8ee;
-  --tier-c: #8b97b3;
+  --tier-1: #ffc93c;
+  --tier-2: #6ad26a;
+  --tier-3: #4fa8ee;
+  --tier-4: #b07ff0;
+  --tier-5: #f08a6a;
+  --tier-6: #8b97b3;
+  --tier-7: #67718a;
   --tier-ink: #15203a;
   --font-display: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
   --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -123,10 +126,13 @@ details.owned .seg { margin-top: 10px; }
     linear-gradient(240deg, rgba(0,0,0,.18) 0 46%, transparent 46%),
     var(--t);
 }
-.tier[data-t="S"] { --t: var(--tier-s); }
-.tier[data-t="A"] { --t: var(--tier-a); }
-.tier[data-t="B"] { --t: var(--tier-b); }
-.tier[data-t="C"] { --t: var(--tier-c); }
+.tier[data-t="1"] { --t: var(--tier-1); }
+.tier[data-t="2"] { --t: var(--tier-2); }
+.tier[data-t="3"] { --t: var(--tier-3); }
+.tier[data-t="4"] { --t: var(--tier-4); }
+.tier[data-t="5"] { --t: var(--tier-5); }
+.tier[data-t="6"] { --t: var(--tier-6); }
+.tier[data-t="7"] { --t: var(--tier-7); }
 .tier-list { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 
 .tribe {
@@ -152,9 +158,9 @@ details.owned .seg { margin-top: 10px; }
   box-shadow: inset 0 0 0 3px rgba(255,255,255,.85), 0 3px 0 var(--edge);
 }
 .head { width: 80%; height: 80%; display: block; margin-top: 8%; }
-.tier[data-t="S"] .badge { width: 68px; height: 68px; }
-.tier[data-t="S"] .tribe { box-shadow: 0 4px 0 var(--edge), inset 0 0 0 3px var(--tier-s); padding: 14px; }
-.tier[data-t="S"] .tribe .name { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.tribe.top .badge { width: 68px; height: 68px; }
+.tribe.top { box-shadow: 0 4px 0 var(--edge), inset 0 0 0 3px var(--tier-1); padding: 14px; }
+.tribe.top .name { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
 .stars { color: var(--gold); letter-spacing: 2px; font-size: .9rem; }
 .why { margin: 6px 0 0; padding-left: 18px; font-size: .88rem; font-weight: 600; }
 .why li { margin: 2px 0; }
@@ -175,6 +181,7 @@ details.owned .seg { margin-top: 10px; }
   font-size: .75rem; font-weight: 800; text-align: center; line-height: 16px;
 }
 .empty { color: var(--muted); }
+.source { margin: 0; color: var(--muted); font-size: .85rem; font-weight: 600; text-align: center; }
 footer { color: var(--muted); font-size: .8rem; font-weight: 600; text-align: center; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -219,7 +226,7 @@ footer { color: var(--muted); font-size: .8rem; font-weight: 600; text-align: ce
     Unofficial fan-made tool, not made or approved by Midjiwan or The Battle of Polytopia.
     All artwork here is original. For the real game, visit
     <a href="https://polytopia.io/" style="color: var(--accent)">polytopia.io</a>.
-    Rankings are a rule of thumb built from common community advice, not official game data.
+    Tier lists come from a player league and player notes, not official game data.
   </footer>
 </div>
 
@@ -315,8 +322,36 @@ function reasons(r) {
   return out;
 }
 
-// Player picks: fixed top spots for setups where experience beats the scores.
-// Pinned tribes go first in this order and fill the S tier; everything else keeps its scored order.
+// League tier lists (Season 38, 1v1), one per map type. Tier 1 first; order inside a tier as in the sheet.
+const LEAGUE = {
+  drylands: [["zebasi","oumaji"], ["imperius","bardur","yadakk"], ["aimo","hoodrick","quetzali"],
+             ["elyrion","cymanti"], ["luxidoor","xinxi"], ["kickoo","vengir","polaris","aquarion"]],
+  pangea:   [["zebasi","imperius","oumaji","yadakk","bardur"], ["aimo","hoodrick","quetzali"],
+             ["cymanti","xinxi","luxidoor"], ["elyrion","kickoo"], ["vengir","polaris","aquarion"]],
+  // Cymanti moved one place up, above Yadakk (player note)
+  lakes:    [["hoodrick","aimo","cymanti","yadakk"], ["imperius","zebasi"], ["xinxi","quetzali","bardur","elyrion"],
+             ["luxidoor","oumaji","kickoo"], ["vengir","polaris","aquarion"]],
+  continents: [["polaris","aquarion"], ["hoodrick","aimo","elyrion"], ["kickoo","zebasi","cymanti","imperius"],
+             ["yadakk","quetzali"], ["bardur","xinxi","luxidoor"], ["oumaji","vengir"]],
+  archipelago: [["polaris"], ["aquarion"], ["kickoo"], ["imperius","luxidoor","zebasi"], ["bardur","quetzali","aimo"],
+             ["cymanti","oumaji","yadakk","xinxi","hoodrick","elyrion","vengir"]],
+};
+const BIG = ["large", "huge", "massive"];
+
+// Player notes on map size. The league lists assume Normal maps.
+function sizeTweaks(tiers) {
+  const move = (id, toTier, index) => {
+    tiers.forEach(t => { const i = t.indexOf(id); if (i >= 0) t.splice(i, 1); });
+    tiers[toTier].splice(index ?? tiers[toTier].length, 0, id);
+  };
+  // Lakes: Elyrion only earns tier 3 on Large and bigger; below that it drops to the top of tier 4.
+  if (state.type === "lakes" && !BIG.includes(state.size)) move("elyrion", 3, 0);
+  // Continents: on Large and bigger, Elyrion moves one place up, above Ai-Mo.
+  if (state.type === "continents" && BIG.includes(state.size)) move("elyrion", 1, 1);
+  return tiers;
+}
+
+// Player picks: fixed top spots for setups where experience beats the lists and scores.
 const PLAYER_PICKS = [
   { type: "drylands", sizes: ["tiny"], top: ["oumaji", "yadakk"],
     warn: { oumaji: "Watch out: Vengir can counter Oumaji on this map." } },
@@ -327,12 +362,36 @@ function playerPick() {
   return PLAYER_PICKS.find(p => p.type === state.type && p.sizes.includes(state.size));
 }
 
+// Returns tiers as arrays of scored tribes, best first.
 function ranking() {
   const scored = TRIBES.filter(t => state.owned.has(t.id)).map(scoreTribe).sort((a, b) => b.total - a.total);
+  const byId = id => scored.find(r => r.t.id === id);
+  let tiers, source;
+
+  if (LEAGUE[state.type]) {
+    source = "league";
+    const ids = sizeTweaks(LEAGUE[state.type].map(t => [...t]));
+    tiers = ids.map(t => t.map(byId).filter(Boolean));
+    // The lists are for 1v1. With more opponents, keep the tiers but reorder inside each one by score.
+    if (state.opp > 1) tiers.forEach(t => t.sort((a, b) => b.total - a.total));
+  } else {
+    source = "score";
+    // Tier 1 holds the top pick, plus the runner-up if it's genuinely close.
+    const n = scored.length > 1 && scored[0].total - scored[1].total <= 0.6 ? 2 : 1;
+    const rest = scored.slice(n);
+    tiers = [scored.slice(0, n), rest.slice(0, 4), rest.slice(4, 9), rest.slice(9)];
+  }
+
   const pick = playerPick();
-  if (!pick) return { ranked: scored, pinned: 0, warn: {} };
-  const pinned = pick.top.map(id => scored.find(r => r.t.id === id)).filter(Boolean);
-  return { ranked: [...pinned, ...scored.filter(r => !pinned.includes(r))], pinned: pinned.length, warn: pick.warn || {} };
+  let pinned = [];
+  if (pick) {
+    pinned = pick.top.map(byId).filter(Boolean);
+    tiers = tiers.map(t => t.filter(r => !pinned.includes(r)));
+    if (source === "score") { tiers[1] = [...tiers[0], ...tiers[1]]; tiers[0] = []; }
+    tiers[0] = [...pinned, ...tiers[0]];
+  }
+  tiers = tiers.filter(t => t.length);
+  return { tiers, pinned, warn: (pick && pick.warn) || {}, source };
 }
 
 // ---------- Low-poly preview island ----------
@@ -546,36 +605,33 @@ function renderOwned() {
 }
 
 function render() {
-  const { ranked, pinned, warn } = ranking();
-  drawMap(ranked[0] && ranked[0].t);
-  if (!ranked.length) {
+  const { tiers, pinned, warn, source } = ranking();
+  const first = tiers[0] && tiers[0][0];
+  drawMap(first && first.t);
+  if (!first) {
     $("results").innerHTML = `<p class="empty">Pick at least one tribe you own to see a ranking.</p>`;
     return;
   }
-  // S tier: always the top pick, plus the runner-up only if it's genuinely close. Never more than two.
-  // Player picks fill the S tier instead.
-  const sCount = pinned ? Math.min(pinned, 2)
-    : ranked.length > 1 && ranked[0].total - ranked[1].total <= 0.6 ? 2 : 1;
-  const rest = ranked.slice(sCount);
-  const tiers = [
-    ["S", ranked.slice(0, sCount)],
-    ["A", rest.slice(0, 4)],
-    ["B", rest.slice(4, 9)],
-    ["C", rest.slice(9)],
-  ].filter(([, list]) => list.length);
+  const mt = MAP_TYPES.find(m => m.id === state.type);
+  // Stars go on one or two top picks, never more: the first two tribes of tier 1.
+  const topPicks = tiers[0].slice(0, 2);
+  const whyFor = (r, tierNo) => {
+    if (pinned.includes(r)) return ["Player pick for this map type and size."];
+    if (source === "league") return [`Tier ${tierNo} on the league list for ${mt.label}.`];
+    return reasons(r);
+  };
 
   let rank = 0;
-  $("results").innerHTML = tiers.map(([tier, list]) => `
-    <div class="tier" data-t="${tier}">
-      <div class="tier-badge" aria-label="${tier} tier">${tier}</div>
+  $("results").innerHTML = tiers.map((list, ti) => `
+    <div class="tier" data-t="${Math.min(ti + 1, 7)}">
+      <div class="tier-badge" aria-label="Tier ${ti + 1}">${ti + 1}</div>
       <div class="tier-list">
         ${list.map(r => {
           rank++;
-          const top = tier === "S";
-          const lines = pinned && top ? ["Player pick for this map type and size."] : reasons(r);
-          const why = top ? `<ul class="why">${lines.map(x => `<li>${x}</li>`).join("")}</ul>` : "";
+          const top = topPicks.includes(r);
+          const why = top ? `<ul class="why">${whyFor(r, ti + 1).map(x => `<li>${x}</li>`).join("")}</ul>` : "";
           const caution = warn[r.t.id] ? `<div class="warn">${warn[r.t.id]}</div>` : "";
-          return `<div class="tribe">
+          return `<div class="tribe${top ? " top" : ""}">
             <div class="badge" style="--c:${shade(r.t.c, -0.45)}">${headSVG(r.t)}</div>
             <div class="body">
               ${top ? `<div class="stars" aria-hidden="true">★★★</div>` : ""}
@@ -588,7 +644,9 @@ function render() {
           </div>`;
         }).join("")}
       </div>
-    </div>`).join("");
+    </div>`).join("") + (source === "league"
+      ? `<p class="source">Tiers from the Season 38 league list for ${mt.label} (1v1, Normal maps), adjusted for map size.${state.opp > 1 ? " With more than one opponent, tribes are reordered inside each tier." : ""}</p>`
+      : `<p class="source">Water World has no league list, so these tiers come from the picker's own scoring.</p>`);
 }
 
 $("setup").addEventListener("change", e => {
