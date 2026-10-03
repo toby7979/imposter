@@ -352,21 +352,23 @@ const PLAYER_PICKS = [
     warn: { oumaji: "Watch out: Vengir can counter Oumaji on this map." } },
   { type: "waterworld", sizes: ["tiny", "small"], top: ["polaris", "aquarion"] },
   { type: "waterworld", sizes: ["normal", "large", "huge", "massive"], top: ["aquarion", "polaris"] },
-  { type: "continents", sizes: ["massive"], top: ["elyrion"] },
+  // Elyrion wins Huge and Massive maps, except Water World and Archipelago
+  { type: ["drylands", "lakes", "pangea", "continents"], sizes: ["huge", "massive"], top: ["elyrion"] },
 ];
 // Player tips: notes that show on a tribe's card without changing the tiers.
-// type "*" applies to every map type; later entries win when two match.
+// Later entries win when two match.
+const ELYRION_LANDS = ["drylands", "lakes", "pangea", "continents"];
 const PLAYER_TIPS = [
-  { type: "*", sizes: BIG, tips: { elyrion: "Wins lots of big maps. The more room it has, the stronger it gets." } },
-  { type: "continents", sizes: ["large", "huge"], tips: { elyrion: "Wins big maps. On Large and bigger Continents maps, Elyrion is the one to beat." } },
-  { type: "continents", sizes: ["massive"], tips: { elyrion: "Wins Massive Continents maps." } },
+  { type: ELYRION_LANDS, sizes: ["large"], tips: { elyrion: "Strong on big maps. On Huge and Massive it's the one to beat." } },
+  { type: ELYRION_LANDS, sizes: ["huge", "massive"], tips: { elyrion: "Wins Huge and Massive maps." } },
 ];
+const matches = p => [].concat(p.type).includes(state.type) && p.sizes.includes(state.size);
 function playerTips() {
-  return Object.assign({}, ...PLAYER_TIPS.filter(p => (p.type === "*" || p.type === state.type) && p.sizes.includes(state.size)).map(p => p.tips));
+  return Object.assign({}, ...PLAYER_TIPS.filter(matches).map(p => p.tips));
 }
 
 function playerPick() {
-  return PLAYER_PICKS.find(p => p.type === state.type && p.sizes.includes(state.size));
+  return PLAYER_PICKS.find(matches);
 }
 
 // Returns tiers as arrays of scored tribes, best first.
