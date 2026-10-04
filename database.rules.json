@@ -65,16 +65,13 @@
       }
     },
     "tribePicker": {
-      "moves": {
+      "order": {
         ".read": true,
         "$setup": {
-          ".validate": "$setup.matches(/^(drylands|lakes|pangea|continents|archipelago|waterworld)_(tiny|small|normal|large|huge|massive)$/)",
-          "$tribe": {
-            ".validate": "$tribe.matches(/^(xinxi|imperius|bardur|oumaji|kickoo|hoodrick|luxidoor|vengir|zebasi|aimo|quetzali|yadakk|aquarion|elyrion|polaris|cymanti)$/)",
-            "$uid": {
-              ".write": "auth != null && auth.uid === $uid",
-              ".validate": "newData.val() === 1 || newData.val() === -1"
-            }
+          ".write": "auth != null",
+          ".validate": "$setup.matches(/^(drylands|lakes|pangea|continents|archipelago|waterworld)_(tiny|small|normal|large|huge|massive)$/) && newData.hasChildren()",
+          "$i": {
+            ".validate": "$i.matches(/^([0-9]|1[0-5])$/) && newData.isString() && newData.val().matches(/^(xinxi|imperius|bardur|oumaji|kickoo|hoodrick|luxidoor|vengir|zebasi|aimo|quetzali|yadakk|aquarion|elyrion|polaris|cymanti)$/)"
           }
         }
       }

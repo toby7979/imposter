@@ -141,6 +141,7 @@ details.owned .seg { margin-top: 6px; }
 .vote button.up.on { color: var(--green); }
 .vote button.down.on { color: #ff8f8f; }
 .vote button.on:hover { background: rgba(255,255,255,.1); }
+.vote button:disabled { opacity: .3; cursor: default; background: transparent; }
 .vote button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .vote .net { min-width: 2.6ch; text-align: center; font-size: .78rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--muted); }
 .vote .net.up { color: var(--green); } .vote .net.down { color: #ff8f8f; }
@@ -394,9 +395,9 @@ function playerPick() {
   return PLAYER_PICKS.find(matches);
 }
 
-// Returns tiers as arrays of scored tribes, best first.
-function ranking() {
-  const scored = TRIBES.filter(t => state.owned.has(t.id)).map(scoreTribe).sort((a, b) => b.total - a.total);
+// Returns tiers as arrays of scored tribes, best first. `raw` skips the players' shared order.
+function ranking({ raw = false } = {}) {
+  const scored = TRIBES.map(scoreTribe).sort((a, b) => b.total - a.total);
   const byId = id => scored.find(r => r.t.id === id);
   let tiers, source;
 
@@ -422,32 +423,35 @@ function ranking() {
     if (source === "score") { tiers[1] = [...tiers[0], ...tiers[1]]; tiers[0] = []; }
     tiers[0] = [...pinned, ...tiers[0]];
   }
-  tiers = applyVotes(tiers.filter(t => t.length));
-  return { tiers, pinned, warn: (pick && pick.warn) || {}, tips: playerTips(), source };
+  let all = tiers.filter(t => t.length);
+  if (!raw) all = applyOrder(all);
+  // Tribes you don't own are hidden after ordering, so everyone shares the same list.
+  tiers = all.map(t => t.filter(r => state.owned.has(r.t.id))).filter(t => t.length);
+  return { tiers, all, pinned, warn: (pick && pick.warn) || {}, tips: playerTips(), source };
 }
 
-// ---------- Live player votes ----------
-// Players move tribes for everyone, in real time. Each player has one vote (up or down) per tribe
-// per map type and size; each net vote moves a tribe one place, across tier lines if it gets there.
-// Votes live in the Imposter Firebase database under tribePicker/. Without Firebase (e.g. inside
-// a claude.ai preview) the picker works as before, just without voting.
+// ---------- Live shared order ----------
+// Anyone can tap ▲ or ▼ to move a tribe one place; the new order is saved for that map type and
+// size and shows for everyone straight away. It's stored in the Imposter Firebase database under
+// tribePicker/order/. Without Firebase (e.g. inside a claude.ai preview) the picker works as
+// before, just without moving tribes.
 const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
-const live = { status: "off", uid: null, db: null, ref: null, net: {}, mine: {}, voters: 0 };
+const live = { status: "off", db: null, ref: null, order: null };
 const setupKey = () => `${state.type}_${state.size}`;
+const TRIBE_IDS = TRIBES.map(t => t.id);
 
-// Each net vote moves a tribe exactly one place from where it currently sits, whatever its
-// neighbours got. Tribes are moved top to bottom, so two neighbours on +1 still swap.
-function applyVotes(tiers) {
+// The full order (all 16 tribes) for this setup: the saved one, repaired if it's missing any tribe.
+function currentOrder(saved) {
+  const base = ranking({ raw: true }).all.flat().map(r => r.t.id);
+  const kept = Array.isArray(saved) ? saved.filter((id, i) => TRIBE_IDS.includes(id) && saved.indexOf(id) === i) : [];
+  return kept.length ? [...kept, ...base.filter(id => !kept.includes(id))] : base;
+}
+
+function applyOrder(tiers) {
+  if (!live.order) return tiers;
   const sizes = tiers.map(t => t.length);
-  const list = tiers.flat();
-  for (const r of [...list]) {
-    const n = live.net[r.t.id] || 0;
-    if (!n) continue;
-    const from = list.indexOf(r);
-    const to = Math.max(0, Math.min(list.length - 1, from - n));
-    list.splice(from, 1);
-    list.splice(to, 0, r);
-  }
+  const order = currentOrder(live.order);
+  const list = tiers.flat().sort((a, b) => order.indexOf(a.t.id) - order.indexOf(b.t.id));
   let k = 0;
   return sizes.map(n => list.slice(k, k += n));
 }
@@ -470,11 +474,9 @@ async function liveInit() {
     ]);
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     const auth = firebase.auth();
-    // Keep the same anonymous player on this device, so votes can be changed but not stacked.
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     let user = await new Promise(resolve => { const off = auth.onAuthStateChanged(u => { off(); resolve(u); }); });
     if (!user) user = (await auth.signInAnonymously()).user;
-    live.uid = user.uid;
     live.db = firebase.database();
     live.status = "on";
     watchSetup();
@@ -488,28 +490,28 @@ async function liveInit() {
 function watchSetup() {
   if (!live.db) return;
   if (live.ref) live.ref.off();
-  live.net = {}; live.mine = {}; live.voters = 0;
-  live.ref = live.db.ref(`tribePicker/moves/${setupKey()}`);
+  live.order = null;
+  live.ref = live.db.ref(`tribePicker/order/${setupKey()}`);
   live.ref.on("value", snap => {
-    const net = {}, mine = {}, voters = new Set();
-    for (const [tribe, votes] of Object.entries(snap.val() || {})) {
-      for (const [uid, v] of Object.entries(votes || {})) {
-        if (v !== 1 && v !== -1) continue;
-        net[tribe] = (net[tribe] || 0) + v;
-        voters.add(uid);
-        if (uid === live.uid) mine[tribe] = v;
-      }
-    }
-    Object.assign(live, { net, mine, voters: voters.size, status: "on" });
+    live.order = snap.val();
+    live.status = "on";
     render();
   }, err => { console.error(err); live.status = "error"; render(); });
 }
 
-async function vote(tribe, dir) {
+// Swap a tribe with its visible neighbour above (dir 1) or below (dir -1).
+async function move(tribe, dir) {
   if (live.status !== "on") return;
-  const next = live.mine[tribe] === dir ? null : dir;   // tapping your own vote again takes it back
   try {
-    await live.db.ref(`tribePicker/moves/${setupKey()}/${tribe}/${live.uid}`).set(next);
+    await live.ref.transaction(saved => {
+      const order = currentOrder(saved);
+      const shown = order.filter(id => state.owned.has(id));
+      const at = shown.indexOf(tribe), other = shown[at - dir];
+      if (at < 0 || !other) return;   // already at the top or bottom: leave it
+      const a = order.indexOf(tribe), b = order.indexOf(other);
+      [order[a], order[b]] = [order[b], order[a]];
+      return order;
+    });
   } catch (err) {
     console.error(err);
     live.status = "error";
@@ -517,24 +519,25 @@ async function vote(tribe, dir) {
   }
 }
 
+async function resetOrder() {
+  if (live.status !== "on") return;
+  try { await live.ref.remove(); } catch (err) { console.error(err); live.status = "error"; render(); }
+}
+
 const CHEVRON = d => `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-function voteHTML(r) {
+function moveHTML(r, first, last) {
   if (live.status !== "on") return "";
-  const n = live.net[r.t.id] || 0, mine = live.mine[r.t.id];
   return `<div class="vote">
-    <button type="button" data-vote="-1" data-tribe="${r.t.id}" class="down${mine === -1 ? " on" : ""}" aria-label="Move ${r.t.name} down" aria-pressed="${mine === -1}">${CHEVRON("M3.5 5.5 8 10l4.5-4.5")}</button>
-    <span class="net ${n > 0 ? "up" : n < 0 ? "down" : ""}" aria-label="Net votes">${n > 0 ? "+" + n : n < 0 ? "−" + -n : "0"}</span>
-    <button type="button" data-vote="1" data-tribe="${r.t.id}" class="up${mine === 1 ? " on" : ""}" aria-label="Move ${r.t.name} up" aria-pressed="${mine === 1}">${CHEVRON("M3.5 10.5 8 6l4.5 4.5")}</button>
+    <button type="button" data-move="-1" data-tribe="${r.t.id}" aria-label="Move ${r.t.name} down a place" ${last ? "disabled" : ""}>${CHEVRON("M3.5 5.5 8 10l4.5-4.5")}</button>
+    <button type="button" data-move="1" data-tribe="${r.t.id}" aria-label="Move ${r.t.name} up a place" ${first ? "disabled" : ""}>${CHEVRON("M3.5 10.5 8 6l4.5 4.5")}</button>
   </div>`;
 }
 
 function liveLine() {
-  const mt = MAP_TYPES.find(m => m.id === state.type), sz = SIZES.find(s => s.id === state.size);
   if (live.status === "on") {
-    const who = live.voters === 1 ? "1 player has" : `${live.voters} players have`;
-    return `<p class="live"><span class="dot">●</span> Live: ${who} voted on ${mt.label} ${sz.label}. Each vote moves a tribe one place for everyone.</p>`;
+    return `<p class="live"><span class="dot">●</span> Live: tap ▲ or ▼ to move a tribe up or down a place. Changes show for everyone.</p>`;
   }
-  if (live.status === "error") return `<p class="live off"><span class="dot">●</span> Voting isn't available right now. The rankings below still work.</p>`;
+  if (live.status === "error") return `<p class="live off"><span class="dot">●</span> Moving tribes isn't available right now. The rankings below still work.</p>`;
   return "";
 }
 
@@ -608,6 +611,7 @@ function renderList() {
   };
 
   let rank = 0;
+  const total = tiers.flat().length;
   $("results").innerHTML = liveLine() + tiers.map((list, ti) => `
     <div class="tier" data-t="${Math.min(ti + 1, 7)}">
       <div class="tier-head"><span>Tier ${ti + 1}</span></div>
@@ -627,13 +631,14 @@ function renderList() {
               ${why}
               ${caution}
             </div>
-            <div class="side">${sideTop}${voteHTML(r)}</div>
+            <div class="side">${sideTop}${moveHTML(r, rank === 1, rank === total)}</div>
           </div>`;
         }).join("")}
       </div>
     </div>`).join("") + (source === "league"
       ? `<p class="source">Tiers from the Season 38 league list for ${mt.label} (1v1 Might, Normal maps), adjusted for map size.${state.opp > 1 || state.mode !== "might" ? ` ${state.mode === "glory" ? "In Glory" : "With more than one opponent"}, tribes are reordered inside each tier.` : ""}</p>`
-      : `<p class="source">Water World has no league list, so these tiers come from the picker's own scoring.</p>`);
+      : `<p class="source">Water World has no league list, so these tiers come from the picker's own scoring.</p>`)
+    + (live.status === "on" && live.order ? `<p class="source"><button type="button" class="linkbtn" id="reset-order">Reset this list to the original order</button></p>` : "");
 }
 
 $("setup").addEventListener("change", e => {
@@ -652,8 +657,9 @@ $("setup").addEventListener("change", e => {
   render();
 });
 $("results").addEventListener("click", e => {
-  const b = e.target.closest("[data-vote]");
-  if (b) vote(b.dataset.tribe, Number(b.dataset.vote));
+  const b = e.target.closest("[data-move]");
+  if (b) move(b.dataset.tribe, Number(b.dataset.move));
+  if (e.target.id === "reset-order") resetOrder();
 });
 $("own-all").addEventListener("click", () => {
   state.owned = new Set(TRIBES.map(t => t.id));
