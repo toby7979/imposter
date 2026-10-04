@@ -63,6 +63,21 @@
           }
         }
       }
+    },
+    "tribePicker": {
+      "moves": {
+        ".read": true,
+        "$setup": {
+          ".validate": "$setup.matches(/^(drylands|lakes|pangea|continents|archipelago|waterworld)_(tiny|small|normal|large|huge|massive)$/)",
+          "$tribe": {
+            ".validate": "$tribe.matches(/^(xinxi|imperius|bardur|oumaji|kickoo|hoodrick|luxidoor|vengir|zebasi|aimo|quetzali|yadakk|aquarion|elyrion|polaris|cymanti)$/)",
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid",
+              ".validate": "newData.val() === 1 || newData.val() === -1"
+            }
+          }
+        }
+      }
     }
   }
 }

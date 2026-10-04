@@ -1,3 +1,5 @@
+<!doctype html>
+<meta charset="utf-8">
 <title>Tribe Picker for Polytopia</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -128,6 +130,24 @@ details.owned .seg { margin-top: 6px; }
 .tribe .name { font-size: .95rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; margin-right: 6px; }
 .tribe .note { color: var(--muted); }
 .tribe .rank { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.side { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.vote { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.vote button {
+  width: 30px; height: 20px; padding: 0; cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,.5); border-radius: 7px;
+  background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: .7rem; line-height: 1;
+}
+.vote button:hover { background: rgba(255,255,255,.25); }
+.vote button.on { background: var(--blue); border-color: var(--blue); }
+.vote button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.vote .net { font-size: .7rem; line-height: 1.1; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: center; }
+.vote .net.up { color: var(--green); } .vote .net.down { color: #ff8f8f; }
+.live {
+  margin: 0; text-align: center; font-size: .8rem; font-weight: 400;
+  background: rgba(0,0,0,.55); border-radius: 10px; padding: 6px 10px 4px;
+}
+.live .dot { color: var(--green); }
+.live.off .dot { color: var(--muted); }
 .badge { width: 44px; height: 44px; display: block; margin-block: -4px -2px; }
 .tribe.top { padding: 8px 10px; border-left: 0; box-shadow: inset 0 0 0 2px var(--gold); }
 .tribe.top .badge { width: 64px; height: 64px; }
@@ -216,6 +236,7 @@ footer a { color: #8fd0ff; }
   </footer>
 </div>
 
+<script src="../firebase-config.js"></script>
 <script>
 // ---------- Game data ----------
 const OPPONENTS = [
@@ -400,8 +421,113 @@ function ranking() {
     if (source === "score") { tiers[1] = [...tiers[0], ...tiers[1]]; tiers[0] = []; }
     tiers[0] = [...pinned, ...tiers[0]];
   }
-  tiers = tiers.filter(t => t.length);
+  tiers = applyVotes(tiers.filter(t => t.length));
   return { tiers, pinned, warn: (pick && pick.warn) || {}, tips: playerTips(), source };
+}
+
+// ---------- Live player votes ----------
+// Players move tribes for everyone, in real time. Each player has one vote (up or down) per tribe
+// per map type and size; each net vote moves a tribe one place, across tier lines if it gets there.
+// Votes live in the Imposter Firebase database under tribePicker/. Without Firebase (e.g. inside
+// a claude.ai preview) the picker works as before, just without voting.
+const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
+const live = { status: "off", uid: null, db: null, ref: null, net: {}, mine: {}, voters: 0 };
+const setupKey = () => `${state.type}_${state.size}`;
+
+function applyVotes(tiers) {
+  const sizes = tiers.map(t => t.length);
+  const flat = tiers.flat().map((r, i) => {
+    const n = live.net[r.t.id] || 0;
+    return { r, key: i - n - 0.5 * Math.sign(n) };
+  });
+  flat.sort((a, b) => a.key - b.key);
+  let k = 0;
+  return sizes.map(n => flat.slice(k, k += n).map(x => x.r));
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function liveInit() {
+  if (typeof FIREBASE_CONFIG === "undefined") return;
+  try {
+    await loadScript(FIREBASE_SDK + "firebase-app-compat.js");
+    await Promise.all([
+      loadScript(FIREBASE_SDK + "firebase-auth-compat.js"),
+      loadScript(FIREBASE_SDK + "firebase-database-compat.js"),
+    ]);
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    // Keep the same anonymous player on this device, so votes can be changed but not stacked.
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    let user = await new Promise(resolve => { const off = auth.onAuthStateChanged(u => { off(); resolve(u); }); });
+    if (!user) user = (await auth.signInAnonymously()).user;
+    live.uid = user.uid;
+    live.db = firebase.database();
+    live.status = "on";
+    watchSetup();
+  } catch (err) {
+    console.error(err);
+    live.status = "error";
+    render();
+  }
+}
+
+function watchSetup() {
+  if (!live.db) return;
+  if (live.ref) live.ref.off();
+  live.net = {}; live.mine = {}; live.voters = 0;
+  live.ref = live.db.ref(`tribePicker/moves/${setupKey()}`);
+  live.ref.on("value", snap => {
+    const net = {}, mine = {}, voters = new Set();
+    for (const [tribe, votes] of Object.entries(snap.val() || {})) {
+      for (const [uid, v] of Object.entries(votes || {})) {
+        if (v !== 1 && v !== -1) continue;
+        net[tribe] = (net[tribe] || 0) + v;
+        voters.add(uid);
+        if (uid === live.uid) mine[tribe] = v;
+      }
+    }
+    Object.assign(live, { net, mine, voters: voters.size, status: "on" });
+    render();
+  }, err => { console.error(err); live.status = "error"; render(); });
+}
+
+async function vote(tribe, dir) {
+  if (live.status !== "on") return;
+  const next = live.mine[tribe] === dir ? null : dir;   // tapping your own vote again takes it back
+  try {
+    await live.db.ref(`tribePicker/moves/${setupKey()}/${tribe}/${live.uid}`).set(next);
+  } catch (err) {
+    console.error(err);
+    live.status = "error";
+    render();
+  }
+}
+
+function voteHTML(r) {
+  if (live.status !== "on") return "";
+  const n = live.net[r.t.id] || 0, mine = live.mine[r.t.id];
+  return `<div class="vote">
+    <button type="button" data-vote="1" data-tribe="${r.t.id}" class="${mine === 1 ? "on" : ""}" aria-label="Move ${r.t.name} up" aria-pressed="${mine === 1}">▲</button>
+    <span class="net ${n > 0 ? "up" : n < 0 ? "down" : ""}" aria-label="Net votes">${n > 0 ? "+" + n : n < 0 ? "−" + -n : "0"}</span>
+    <button type="button" data-vote="-1" data-tribe="${r.t.id}" class="${mine === -1 ? "on" : ""}" aria-label="Move ${r.t.name} down" aria-pressed="${mine === -1}">▼</button>
+  </div>`;
+}
+
+function liveLine() {
+  const mt = MAP_TYPES.find(m => m.id === state.type), sz = SIZES.find(s => s.id === state.size);
+  if (live.status === "on") {
+    const who = live.voters === 1 ? "1 player has" : `${live.voters} players have`;
+    return `<p class="live"><span class="dot">●</span> Live: ${who} voted on ${mt.label} ${sz.label}. Tap ▲ or ▼ to move a tribe for everyone.</p>`;
+  }
+  if (live.status === "error") return `<p class="live off"><span class="dot">●</span> Voting isn't available right now. The rankings below still work.</p>`;
+  return "";
 }
 
 // ---------- Rendering ----------
@@ -449,7 +575,7 @@ function render() {
   };
 
   let rank = 0;
-  $("results").innerHTML = tiers.map((list, ti) => `
+  $("results").innerHTML = liveLine() + tiers.map((list, ti) => `
     <div class="tier" data-t="${Math.min(ti + 1, 7)}">
       <div class="tier-head"><span>Tier ${ti + 1}</span></div>
       <div class="tier-list">
@@ -457,6 +583,7 @@ function render() {
           rank++;
           const top = topPicks.includes(r);
           const why = top ? `<ul class="why">${whyFor(r, ti + 1).map(x => `<li>${x}</li>`).join("")}</ul>` : "";
+          const sideTop = top ? `<div class="pick">Top pick</div>` : live.status === "on" ? "" : `<div class="rank">#${rank}</div>`;
           const caution = (warn[r.t.id] ? `<div class="warn">${warn[r.t.id]}</div>` : "")
             + (tips[r.t.id] ? `<div class="tip">${tips[r.t.id]}</div>` : "");
           return `<div class="tribe${top ? " top" : ""}">
@@ -467,7 +594,7 @@ function render() {
               ${why}
               ${caution}
             </div>
-            ${top ? `<div class="pick">Top pick</div>` : `<div class="rank">#${rank}</div>`}
+            <div class="side">${sideTop}${voteHTML(r)}</div>
           </div>`;
         }).join("")}
       </div>
@@ -488,7 +615,12 @@ $("setup").addEventListener("change", e => {
   }
   store.set("mode", state.mode); store.set("opp1v1", state.opp); store.set("type", state.type); store.set("size", state.size);
   store.set("owned", [...state.owned]);
+  if (el.name === "type" || el.name === "size") watchSetup();
   render();
+});
+$("results").addEventListener("click", e => {
+  const b = e.target.closest("[data-vote]");
+  if (b) vote(b.dataset.tribe, Number(b.dataset.vote));
 });
 $("own-all").addEventListener("click", () => {
   state.owned = new Set(TRIBES.map(t => t.id));
@@ -498,10 +630,9 @@ $("own-free").addEventListener("click", () => {
   state.owned = new Set(TRIBES.filter(t => t.free).map(t => t.id));
   store.set("owned", [...state.owned]); renderOwned(); render();
 });
-let resizeTimer;
-window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 
 renderControls();
 render();
+liveInit();
 if (document.fonts) document.fonts.ready.then(render);
 </script>
