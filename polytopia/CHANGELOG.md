@@ -6,6 +6,12 @@ to remove just that one change and keep everything after it.
 
 Live site: https://toby7979.github.io/imposter/polytopia/
 
+**The live list is the source of truth.** Players' orders are saved in Firebase
+(`tribePicker/order/`) and everyone sees them in real time. Page updates must
+never reset, delete or overwrite them; a setup players have reordered keeps
+their order even when the default tiers change. Only the owner resets a list,
+by hand, in the Firebase console.
+
 ## 2026-10-04
 
 - `098bcec` "Reset this list" link removed. To put a list back to the original order,
