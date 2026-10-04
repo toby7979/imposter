@@ -435,15 +435,21 @@ const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
 const live = { status: "off", uid: null, db: null, ref: null, net: {}, mine: {}, voters: 0 };
 const setupKey = () => `${state.type}_${state.size}`;
 
+// Each net vote moves a tribe exactly one place from where it currently sits, whatever its
+// neighbours got. Tribes are moved top to bottom, so two neighbours on +1 still swap.
 function applyVotes(tiers) {
   const sizes = tiers.map(t => t.length);
-  const flat = tiers.flat().map((r, i) => {
+  const list = tiers.flat();
+  for (const r of [...list]) {
     const n = live.net[r.t.id] || 0;
-    return { r, key: i - n - 0.5 * Math.sign(n) };
-  });
-  flat.sort((a, b) => a.key - b.key);
+    if (!n) continue;
+    const from = list.indexOf(r);
+    const to = Math.max(0, Math.min(list.length - 1, from - n));
+    list.splice(from, 1);
+    list.splice(to, 0, r);
+  }
   let k = 0;
-  return sizes.map(n => flat.slice(k, k += n).map(x => x.r));
+  return sizes.map(n => list.slice(k, k += n));
 }
 
 function loadScript(src) {
