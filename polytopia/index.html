@@ -519,11 +519,6 @@ async function move(tribe, dir) {
   }
 }
 
-async function resetOrder() {
-  if (live.status !== "on") return;
-  try { await live.ref.remove(); } catch (err) { console.error(err); live.status = "error"; render(); }
-}
-
 const CHEVRON = d => `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 function moveHTML(r, first, last) {
   if (live.status !== "on") return "";
@@ -637,8 +632,7 @@ function renderList() {
       </div>
     </div>`).join("") + (source === "league"
       ? `<p class="source">Tiers from the Season 38 league list for ${mt.label} (1v1 Might, Normal maps), adjusted for map size.${state.opp > 1 || state.mode !== "might" ? ` ${state.mode === "glory" ? "In Glory" : "With more than one opponent"}, tribes are reordered inside each tier.` : ""}</p>`
-      : `<p class="source">Water World has no league list, so these tiers come from the picker's own scoring.</p>`)
-    + (live.status === "on" && live.order ? `<p class="source"><button type="button" class="linkbtn" id="reset-order">Reset this list to the original order</button></p>` : "");
+      : `<p class="source">Water World has no league list, so these tiers come from the picker's own scoring.</p>`);
 }
 
 $("setup").addEventListener("change", e => {
@@ -659,7 +653,6 @@ $("setup").addEventListener("change", e => {
 $("results").addEventListener("click", e => {
   const b = e.target.closest("[data-move]");
   if (b) move(b.dataset.tribe, Number(b.dataset.move));
-  if (e.target.id === "reset-order") resetOrder();
 });
 $("own-all").addEventListener("click", () => {
   state.owned = new Set(TRIBES.map(t => t.id));

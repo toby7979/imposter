@@ -8,6 +8,8 @@ Live site: https://toby7979.github.io/imposter/polytopia/
 
 ## 2026-10-04
 
+- "Reset this list" link removed. To put a list back to the original order,
+  delete it in the Firebase console (Data → tribePicker → order → that setup).
 - `878ec9b` No more voting: tapping ▲ or ▼ moves a tribe one place, every tap, for
   everyone. The shared order is saved per map type and size under
   `tribePicker/order/` (new database rules). "Reset this list" puts it back.
