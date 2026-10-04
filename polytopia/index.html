@@ -443,14 +443,11 @@ const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
 const live = { status: "off", uid: null, db: null, ref: null, net: {}, mine: {}, voters: 0 };
 const setupKey = () => `${state.type}_${state.size}`;
 
-// How many net votes it takes to move a tribe one place, so a single tap doesn't reshuffle the list.
-const VOTES_PER_PLACE = 3;
-
 function applyVotes(tiers) {
   const sizes = tiers.map(t => t.length);
   const flat = tiers.flat().map((r, i) => {
-    const moves = Math.trunc((live.net[r.t.id] || 0) / VOTES_PER_PLACE);
-    return { r, key: i - moves - 0.5 * Math.sign(moves) };
+    const n = live.net[r.t.id] || 0;
+    return { r, key: i - n - 0.5 * Math.sign(n) };
   });
   flat.sort((a, b) => a.key - b.key);
   let k = 0;
@@ -537,7 +534,7 @@ function liveLine() {
   const mt = MAP_TYPES.find(m => m.id === state.type), sz = SIZES.find(s => s.id === state.size);
   if (live.status === "on") {
     const who = live.voters === 1 ? "1 player has" : `${live.voters} players have`;
-    return `<p class="live"><span class="dot">●</span> Live: ${who} voted on ${mt.label} ${sz.label}. Every ${VOTES_PER_PLACE} votes moves a tribe one place for everyone.</p>`;
+    return `<p class="live"><span class="dot">●</span> Live: ${who} voted on ${mt.label} ${sz.label}. Each vote moves a tribe one place for everyone.</p>`;
   }
   if (live.status === "error") return `<p class="live off"><span class="dot">●</span> Voting isn't available right now. The rankings below still work.</p>`;
   return "";
