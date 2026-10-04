@@ -8,7 +8,7 @@ Live site: https://toby7979.github.io/imposter/polytopia/
 
 ## 2026-10-04
 
-- No more voting: tapping ▲ or ▼ moves a tribe one place, every tap, for
+- `878ec9b` No more voting: tapping ▲ or ▼ moves a tribe one place, every tap, for
   everyone. The shared order is saved per map type and size under
   `tribePicker/order/` (new database rules). "Reset this list" puts it back.
 - `ad1f7e9` Each vote moves a tribe exactly one place from where it sits, even when its
