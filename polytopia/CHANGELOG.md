@@ -8,6 +8,9 @@ Live site: https://toby7979.github.io/imposter/polytopia/
 
 ## 2026-10-04
 
+- Calmer voting: a tribe moves one place per 3 net votes (was every vote),
+  cards slide to their new place, and your own vote shows as a coloured
+  arrow instead of a solid button.
 - `b910abe` Vote control laid out sideways: down, total, up.
 - `34491c9` Vote control restyled as a rounded pill with chevron arrows.
 - `0c3492b` **Live player voting.** ▲/▼ on every tribe moves it one place for

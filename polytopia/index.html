@@ -145,8 +145,9 @@ details.owned .seg { margin-top: 6px; }
 .vote button svg { width: 14px; height: 14px; }
 .vote button:hover { background: rgba(255,255,255,.1); color: #fff; }
 .vote button:active { transform: scale(.88); }
-.vote button.up.on { background: var(--green); color: #10300a; }
-.vote button.down.on { background: #ff7070; color: #3a0a0a; }
+.vote button.up.on { color: var(--green); }
+.vote button.down.on { color: #ff8f8f; }
+.vote button.on:hover { background: rgba(255,255,255,.1); }
 .vote button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .vote .net { min-width: 2.6ch; text-align: center; font-size: .78rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--muted); }
 .vote .net.up { color: var(--green); } .vote .net.down { color: #ff8f8f; }
@@ -442,11 +443,14 @@ const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
 const live = { status: "off", uid: null, db: null, ref: null, net: {}, mine: {}, voters: 0 };
 const setupKey = () => `${state.type}_${state.size}`;
 
+// How many net votes it takes to move a tribe one place, so a single tap doesn't reshuffle the list.
+const VOTES_PER_PLACE = 3;
+
 function applyVotes(tiers) {
   const sizes = tiers.map(t => t.length);
   const flat = tiers.flat().map((r, i) => {
-    const n = live.net[r.t.id] || 0;
-    return { r, key: i - n - 0.5 * Math.sign(n) };
+    const moves = Math.trunc((live.net[r.t.id] || 0) / VOTES_PER_PLACE);
+    return { r, key: i - moves - 0.5 * Math.sign(moves) };
   });
   flat.sort((a, b) => a.key - b.key);
   let k = 0;
@@ -533,7 +537,7 @@ function liveLine() {
   const mt = MAP_TYPES.find(m => m.id === state.type), sz = SIZES.find(s => s.id === state.size);
   if (live.status === "on") {
     const who = live.voters === 1 ? "1 player has" : `${live.voters} players have`;
-    return `<p class="live"><span class="dot">●</span> Live: ${who} voted on ${mt.label} ${sz.label}. Tap ▲ or ▼ to move a tribe for everyone.</p>`;
+    return `<p class="live"><span class="dot">●</span> Live: ${who} voted on ${mt.label} ${sz.label}. Every ${VOTES_PER_PLACE} votes moves a tribe one place for everyone.</p>`;
   }
   if (live.status === "error") return `<p class="live off"><span class="dot">●</span> Voting isn't available right now. The rankings below still work.</p>`;
   return "";
@@ -567,7 +571,32 @@ function renderOwned() {
   $("owned-summary").textContent = n === TRIBES.length ? "Tribes I own: all 16" : `Tribes I own: ${n} of 16`;
 }
 
+// Slide cards to their new places instead of jumping (skipped for reduced motion).
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+function cardPositions() {
+  const pos = {};
+  document.querySelectorAll("#results .tribe[data-id]").forEach(el => { pos[el.dataset.id] = el.getBoundingClientRect().top; });
+  return pos;
+}
+function slideFrom(before) {
+  if (reduceMotion) return;
+  document.querySelectorAll("#results .tribe[data-id]").forEach(el => {
+    const was = before[el.dataset.id];
+    if (was === undefined) return;
+    const dy = was - el.getBoundingClientRect().top;
+    if (Math.abs(dy) < 2) return;
+    el.animate([{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }],
+      { duration: 650, easing: "cubic-bezier(.2,.8,.2,1)" });
+  });
+}
+
 function render() {
+  const before = cardPositions();
+  renderList();
+  slideFrom(before);
+}
+
+function renderList() {
   const { tiers, pinned, warn, tips, source } = ranking();
   const first = tiers[0] && tiers[0][0];
   if (!first) {
@@ -595,7 +624,7 @@ function render() {
           const sideTop = top ? `<div class="pick">Top pick</div>` : live.status === "on" ? "" : `<div class="rank">#${rank}</div>`;
           const caution = (warn[r.t.id] ? `<div class="warn">${warn[r.t.id]}</div>` : "")
             + (tips[r.t.id] ? `<div class="tip">${tips[r.t.id]}</div>` : "");
-          return `<div class="tribe${top ? " top" : ""}">
+          return `<div class="tribe${top ? " top" : ""}" data-id="${r.t.id}">
             <img class="badge" src="tribes/${r.t.id}.png" alt="" width="44" height="44">
             <div class="body">
               ${top ? `<div class="stars" aria-hidden="true">★★★</div>` : ""}
