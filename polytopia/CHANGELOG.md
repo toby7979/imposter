@@ -8,7 +8,7 @@ Live site: https://toby7979.github.io/imposter/polytopia/
 
 ## 2026-10-04
 
-- Back to one vote = one place (the 3-votes rule is dropped for now; can come
+- `099c5f6` Back to one vote = one place (the 3-votes rule is dropped for now; can come
   back later). Sliding cards and the subtler vote arrow stay.
 - `d371102` Calmer voting: a tribe moves one place per 3 net votes (was every vote),
   cards slide to their new place, and your own vote shows as a coloured
