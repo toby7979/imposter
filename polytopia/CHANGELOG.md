@@ -8,7 +8,7 @@ Live site: https://toby7979.github.io/imposter/polytopia/
 
 ## 2026-10-04
 
-- Each vote moves a tribe exactly one place from where it sits, even when its
+- `ad1f7e9` Each vote moves a tribe exactly one place from where it sits, even when its
   neighbours were also voted (before, equal votes on neighbours cancelled out).
 - `2b04088` Suggest button (Google Form) removed; the banner points to the vote arrows.
 - `099c5f6` Back to one vote = one place (the 3-votes rule is dropped for now; can come
