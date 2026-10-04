@@ -8,7 +8,7 @@ Live site: https://toby7979.github.io/imposter/polytopia/
 
 ## 2026-10-04
 
-- Suggest button (Google Form) removed; the banner points to the vote arrows.
+- `2b04088` Suggest button (Google Form) removed; the banner points to the vote arrows.
 - `099c5f6` Back to one vote = one place (the 3-votes rule is dropped for now; can come
   back later). Sliding cards and the subtler vote arrow stay.
 - `d371102` Calmer voting: a tribe moves one place per 3 net votes (was every vote),
