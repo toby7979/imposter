@@ -12,6 +12,14 @@ never reset, delete or overwrite them; a setup players have reordered keeps
 their order even when the default tiers change. Only the owner resets a list,
 by hand, in the Firebase console.
 
+**Backups.** Every hour a GitHub Action copies the live orders into
+`orders/latest.json` on the `tribe-picker-backups` branch. Each change is a
+commit there, so any earlier state of the lists can be found and restored.
+
+## 2026-10-05
+
+- Hourly backup of the live orders (`.github/workflows/backup-tribe-orders.yml`).
+
 ## 2026-10-04
 
 - `098bcec` "Reset this list" link removed. To put a list back to the original order,

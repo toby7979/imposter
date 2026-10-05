@@ -1,0 +1,49 @@
+# Copies the tribe picker's live shared orders out of Firebase into the
+# `tribe-picker-backups` branch every hour, so every revision players make is kept.
+# Read-only on Firebase: it never changes or resets the live lists.
+name: Back up tribe picker orders
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tribe-picker-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch the live orders
+        run: |
+          curl -sSf "https://imposter-53b67-default-rtdb.europe-west1.firebasedatabase.app/tribePicker/order.json" -o orders.json
+          python3 -m json.tool orders.json > /dev/null
+
+      - name: Save to the backups branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q backup && cd backup
+          git config user.name "tribe-picker-backup"
+          git config user.email "tribe-picker-backup@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth=1 origin tribe-picker-backups; then
+            git checkout -q -b tribe-picker-backups FETCH_HEAD
+          else
+            git checkout -q --orphan tribe-picker-backups
+          fi
+          mkdir -p orders
+          python3 -m json.tool --sort-keys ../orders.json > orders/latest.json
+          git add orders/latest.json
+          if git diff --cached --quiet; then
+            echo "No changes since the last backup."
+            exit 0
+          fi
+          # [skip netlify] stops Netlify from trying to build this branch.
+          git commit -q -m "Backup of live tribe orders $(date -u +'%Y-%m-%d %H:%M UTC') [skip netlify]"
+          git push -q origin tribe-picker-backups
