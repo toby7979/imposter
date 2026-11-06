@@ -1,0 +1,27 @@
+{
+  "name": "imposter-app",
+  "version": "1.0.0",
+  "description": "A pass-and-play vocabulary-building bluffing game. One player is secretly given a different word or number to everyone else, and has to bluff their way through a clue round without getting caught. 11+ vocabulary is the default theme (closest to genuinely educational), but it's built to be family fun first — the other themes (animals, food, countries, movies, numbers) stay just as prominent for players who want pure play over the vocabulary angle.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sync:ios": "rm -rf www && mkdir -p www/icons && cp index.html styles.css app.js wordpacks.js firebase-config.js online.js manifest.json www/ && cp icons/*.png www/icons/ && npx cap sync ios"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toby7979/imposter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/toby7979/imposter/issues"
+  },
+  "homepage": "https://github.com/toby7979/imposter#readme",
+  "dependencies": {
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0"
+  }
+}

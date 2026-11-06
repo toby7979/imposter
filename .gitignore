@@ -1,1 +1,6 @@
 .DS_Store
+node_modules/
+www/
+ios/App/build/
+ios/App/Pods/
+ios/App/App/public/
